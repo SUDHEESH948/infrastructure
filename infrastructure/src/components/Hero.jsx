@@ -44,9 +44,9 @@ const Hero = () => {
     <section
       id="home"
       ref={heroRef}
-      className="relative h-screen h-[100dvh] w-full overflow-hidden bg-slate-950"
+      className="relative min-h-[100dvh] h-[100dvh] w-full overflow-hidden bg-slate-950"
     >
-      {/* 100VH FULL BLEED VIDEO BACKGROUND */}
+      {/* FULL BLEED RESPONSIVE VIDEO BACKGROUND */}
       <div className="absolute inset-0 h-full w-full overflow-hidden pointer-events-none">
         <AnimatePresence mode="sync">
           <motion.video
@@ -60,7 +60,7 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute left-1/2 top-1/2 h-[100dvh] w-screen min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover object-center"
+            className="absolute left-1/2 top-1/2 min-h-full min-w-full h-full w-full -translate-x-1/2 -translate-y-1/2 object-cover object-center"
           >
             <source src={slide.video} type="video/mp4" />
           </motion.video>
@@ -69,11 +69,11 @@ const Hero = () => {
 
       {/* OVERLAYS */}
       <div className="absolute inset-0 bg-[#0066B4]/30 mix-blend-multiply" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30 sm:to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/45" />
 
       {/* HERO CONTENT */}
-      <div className="relative z-10 flex h-full w-full items-center px-6 sm:px-10 lg:px-16 pt-24 pb-20">
+      <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center px-4 sm:px-10 lg:px-16 pt-20 pb-12 sm:pt-24 sm:pb-20">
         <div className="mx-auto w-full max-w-7xl">
           <div className="max-w-4xl">
             {/* EYEBROW */}
@@ -84,10 +84,10 @@ const Hero = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.5 }}
-                className="mb-5 flex items-center gap-3"
+                className="mb-3 sm:mb-5 flex items-center gap-2 sm:gap-3"
               >
-                <span className="h-px w-8 bg-white/70" />
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/90">
+                <span className="h-px w-5 sm:w-8 bg-white/70 shrink-0" />
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] sm:tracking-[0.28em] text-white/90">
                   {slide.eyebrow}
                 </p>
               </motion.div>
@@ -104,7 +104,7 @@ const Hero = () => {
                   duration: 0.8,
                   ease: "easeOut",
                 }}
-                className="font-serif text-4xl font-light leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl"
+                className="font-serif text-2xl xs:text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[1.12] sm:leading-[1.05] tracking-tight text-white"
               >
                 {slide.quote}
               </motion.h1>
@@ -121,7 +121,7 @@ const Hero = () => {
                   duration: 0.6,
                   delay: 0.15,
                 }}
-                className="mt-6 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base md:text-lg"
+                className="mt-3 sm:mt-6 max-w-xl text-xs sm:text-base md:text-lg leading-relaxed text-white/80 line-clamp-3 sm:line-clamp-none"
               >
                 {slide.description}
               </motion.p>
@@ -132,19 +132,19 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="mt-8 flex flex-wrap items-center gap-4"
+              className="mt-5 sm:mt-8 flex flex-wrap items-center gap-2.5 sm:gap-4"
             >
               <a
                 href="#projects"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#0066B4] shadow-md transition-all duration-300 hover:scale-[1.02] hover:bg-slate-100"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 sm:px-7 sm:py-3.5 text-xs sm:text-sm font-semibold text-[#0066B4] shadow-md transition-all duration-300 hover:scale-[1.02] hover:bg-slate-100"
               >
                 Explore Projects
-                <ArrowUpRight size={17} />
+                <ArrowUpRight size={15} className="sm:size-[17px]" />
               </a>
 
               <a
                 href="#contact"
-                className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-7 py-3.5 text-sm font-medium text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-[#0066B4]"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-2.5 sm:px-7 sm:py-3.5 text-xs sm:text-sm font-medium text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-[#0066B4]"
               >
                 Start a Project
               </a>
@@ -152,8 +152,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-
-      
     </section>
   );
 };

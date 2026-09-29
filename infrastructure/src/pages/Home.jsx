@@ -9,8 +9,8 @@ const Home = () => {
     <div className="relative min-h-screen bg-white">
       <main className="relative">
         {/* HERO / HOME */}
-        <section id="home" className="relative z-0 h-screen">
-          <div className="sticky top-0 h-screen w-full overflow-hidden">
+        <section className="relative z-0 min-h-[100dvh] h-[100dvh] w-full bg-slate-950">
+          <div className="sticky top-0 h-full min-h-[100dvh] w-full overflow-hidden">
             <Hero />
           </div>
         </section>
@@ -24,16 +24,10 @@ const Home = () => {
         </section>
 
         {/* PROJECTS */}
-        <section
-          id="projects"
-          className="relative z-20 w-full bg-[#F7FAFC]"
-        >
+        <section id="projects" className="relative z-20 w-full bg-[#F7FAFC]">
           <Projects />
         </section>
-         <section
-          id="projects"
-          className="relative z-20 w-full bg-[#F7FAFC]"
-        >
+        <section id="gallery" className="relative z-20 w-full bg-[#F7FAFC]">
           <Gallery />
         </section>
       </main>
