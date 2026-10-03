@@ -202,7 +202,7 @@ const Services = () => {
       {/* =====================================================
           HERO SECTION
       ===================================================== */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#EDF5FA] to-[#FAFCFE] px-5 pb-20 pt-36 md:px-10 md:pb-28 md:pt-44">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#EDF5FA] to-[#FAFCFE] px-4 pb-14 pt-24 xs:px-6 xs:pb-16 xs:pt-28 sm:px-10 sm:pb-20 sm:pt-36 md:pb-28 md:pt-44">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -210,22 +210,22 @@ const Services = () => {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* LABEL */}
-            <div className="mb-6 flex items-center gap-3">
-              <span className="h-px w-10 bg-[#0066B4]" />
-              <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#0066B4]">
+            <div className="mb-4 sm:mb-6 flex items-center gap-2.5 sm:gap-3">
+              <span className="h-px w-7 sm:w-10 bg-[#0066B4]" />
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#0066B4]">
                 Capabilities & Practice
               </span>
             </div>
 
             {/* TITLE */}
-            <h1 className="max-w-5xl font-serif text-5xl font-light leading-[1.02] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
+            <h1 className="max-w-5xl font-serif text-3xl font-light leading-[0.98] tracking-tight xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl sm:leading-[1.02]">
               Engineering solutions,
               <br />
               <span className="italic text-[#0066B4]">grounded in precision.</span>
             </h1>
 
             {/* DESCRIPTION */}
-            <p className="mt-8 max-w-2xl text-base leading-relaxed text-slate-600 md:text-lg">
+            <p className="mt-4 sm:mt-8 max-w-2xl text-xs sm:text-base leading-relaxed text-slate-600 md:text-lg">
               End-to-end civil engineering, geodetic surveys, governmental
               clearance pathways, and contracting capabilities tailored for complex
               built environments.
@@ -234,7 +234,7 @@ const Services = () => {
         </div>
 
         {/* BACKGROUND DECORATIVE WATERMARK */}
-        <div className="pointer-events-none absolute -right-6 bottom-0 select-none font-serif text-[180px] font-light leading-none text-[#0066B4]/[0.035] md:text-[320px]">
+        <div className="pointer-events-none absolute -right-6 bottom-0 select-none font-serif text-[120px] font-light leading-none text-[#0066B4]/[0.035] xs:text-[160px] sm:text-[220px] md:text-[320px]">
           01
         </div>
       </section>
@@ -242,15 +242,15 @@ const Services = () => {
       {/* =====================================================
           SERVICE GRID & FILTER
       ===================================================== */}
-      <section className="px-5 py-12 md:px-10 md:py-20">
+      <section className="px-4 py-10 xs:px-6 xs:py-12 md:px-10 md:py-20">
         <div className="mx-auto max-w-7xl">
           {/* FILTER BAR */}
-          <div className="flex flex-col gap-6 border-b border-[#0066B4]/10 pb-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 sm:gap-6 border-b border-[#0066B4]/10 pb-6 sm:pb-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
                 Directory
               </span>
-              <h2 className="mt-1 font-serif text-3xl font-light md:text-4xl">
+              <h2 className="mt-1 font-serif text-2xl xs:text-3xl font-light md:text-4xl">
                 Explore Our Specializations
               </h2>
             </div>
@@ -265,12 +265,16 @@ const Services = () => {
                     whitespace-nowrap
                     rounded-full
                     border
-                    px-5
-                    py-2.5
+                    px-3.5
+                    py-1.5
                     text-xs
                     font-medium
                     transition-all
                     duration-300
+                    xs:px-4
+                    xs:py-2
+                    sm:px-5
+                    sm:py-2.5
                     ${
                       activeCategory === category
                         ? "border-[#0066B4] bg-[#0066B4] text-white shadow-md shadow-[#0066B4]/20"
@@ -287,7 +291,7 @@ const Services = () => {
           {/* GRID */}
           <motion.div
             layout
-            className="mt-12 grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3"
+            className="mt-8 grid grid-cols-1 gap-5 xs:gap-6 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3"
           >
             <AnimatePresence mode="popLayout">
               {filteredServices.map((service, index) => {
@@ -312,7 +316,7 @@ const Services = () => {
                       flex
                       flex-col
                       overflow-hidden
-                      rounded-[26px]
+                      rounded-[20px]
                       border
                       border-[#0066B4]/10
                       bg-white
@@ -321,10 +325,11 @@ const Services = () => {
                       duration-500
                       hover:border-[#0066B4]/30
                       hover:shadow-[0_20px_50px_rgba(0,102,180,0.12)]
+                      xs:rounded-[26px]
                     "
                   >
                     {/* CARD IMAGE CONTAINER */}
-                    <div className="relative h-[220px] w-full overflow-hidden bg-slate-100">
+                    <div className="relative h-[180px] w-full overflow-hidden bg-slate-100 xs:h-[200px] sm:h-[220px]">
                       <img
                         src={service.image}
                         alt={service.title}
@@ -344,18 +349,18 @@ const Services = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#071b2d]/80 via-[#0066B4]/20 to-transparent opacity-85 transition-opacity duration-300 group-hover:opacity-95" />
 
                       {/* NUMBER PILL */}
-                      <div className="absolute left-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 font-mono text-xs font-semibold text-[#0066B4] shadow-md backdrop-blur-md">
+                      <div className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 font-mono text-[11px] font-semibold text-[#0066B4] shadow-md backdrop-blur-md xs:left-5 xs:top-5 xs:h-9 xs:w-9 xs:text-xs">
                         {service.number}
                       </div>
 
                       {/* FLOATING ICON */}
                       <div className="
                         absolute
-                        bottom-4
-                        left-5
+                        bottom-3.5
+                        left-4
                         flex
-                        h-11
-                        w-11
+                        h-10
+                        w-10
                         items-center
                         justify-center
                         rounded-xl
@@ -367,38 +372,43 @@ const Services = () => {
                         duration-300
                         group-hover:bg-[#0066B4]
                         group-hover:text-white
+                        xs:bottom-4
+                        xs:left-5
+                        xs:h-11
+                        xs:w-11
                       ">
-                        <Icon size={20} strokeWidth={1.8} />
+                        <Icon size={18} strokeWidth={1.8} className="xs:size-5" />
                       </div>
 
                       {/* CATEGORY TAG */}
-                      <span className="absolute bottom-5 right-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90">
+                      <span className="absolute bottom-4 right-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/90 xs:bottom-5 xs:right-5 xs:text-[11px]">
                         {service.category}
                       </span>
                     </div>
 
                     {/* CONTENT AREA */}
-                    <div className="flex flex-1 flex-col justify-between p-6">
+                    <div className="flex flex-1 flex-col justify-between p-4 xs:p-5 sm:p-6">
                       <div>
                         <h3 className="
                           font-serif
-                          text-2xl
+                          text-xl
                           font-normal
                           leading-snug
                           text-[#17221D]
                           transition-colors
                           duration-300
                           group-hover:text-[#0066B4]
+                          xs:text-2xl
                         ">
                           {service.title}
                         </h3>
 
-                        <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
+                        <p className="mt-2 text-xs leading-5 text-slate-500 xs:mt-3 xs:text-sm xs:leading-6 line-clamp-3">
                           {service.description}
                         </p>
                       </div>
 
-                      <div className="mt-6 border-t border-slate-100 pt-5">
+                      <div className="mt-4 border-t border-slate-100 pt-4 xs:mt-6 xs:pt-5">
                         <button
                           onClick={() => setSelectedService(service)}
                           className="
@@ -417,8 +427,8 @@ const Services = () => {
                         >
                           <span>Detailed Scope</span>
                           <ArrowUpRight
-                            size={16}
-                            className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                            size={15}
+                            className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 xs:size-4"
                           />
                         </button>
                       </div>
@@ -446,27 +456,27 @@ const Services = () => {
       {/* =====================================================
           PROCESS SECTION
       ===================================================== */}
-      <section className="bg-[#0066B4] px-5 py-20 text-white md:px-10 md:py-28">
+      <section className="bg-[#0066B4] px-4 py-12 text-white xs:px-6 xs:py-16 sm:px-10 sm:py-20 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-end">
+          <div className="grid gap-6 sm:gap-10 lg:grid-cols-2 lg:items-end">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] sm:tracking-[0.3em] text-white/60">
                 Operational Framework
               </span>
-              <h2 className="mt-4 font-serif text-4xl font-light leading-tight md:text-6xl">
+              <h2 className="mt-3 font-serif text-2xl font-light leading-tight xs:mt-4 xs:text-3xl sm:text-4xl md:text-6xl">
                 Rigorous oversight.
                 <br />
                 Seamless execution.
               </h2>
             </div>
 
-            <p className="text-sm leading-7 text-white/80 md:text-base">
+            <p className="text-xs sm:text-sm leading-6 sm:leading-7 text-white/80 md:text-base">
               From topographical validation to multi-tier governmental
               clearance and final commissioning, our turnkey approach eliminates
               bottlenecks and mitigates risk across every milestone.
             </p>
           </div>
-          <div className="mt-16 grid grid-cols-1 overflow-hidden rounded-2xl border border-white sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 sm:mt-16 grid grid-cols-1 overflow-hidden rounded-2xl border border-white sm:grid-cols-2 lg:grid-cols-4">
   {[
     {
       step: "01",
@@ -492,7 +502,7 @@ const Services = () => {
     <div
       key={item.step}
       className={`
-        p-6 md:p-8
+        p-4 xs:p-6 md:p-8
         border-white/30
         ${index !== 3 ? "border-b lg:border-b-0" : ""}
         ${index % 2 === 0 ? "sm:border-r" : "sm:border-r-0"}
@@ -502,10 +512,10 @@ const Services = () => {
       <span className="font-mono text-xs font-semibold text-white/60">
         {item.step}
       </span>
-      <h3 className="mt-6 font-serif text-2xl font-light text-white">
+      <h3 className="mt-4 sm:mt-6 font-serif text-xl xs:text-2xl font-light text-white">
         {item.title}
       </h3>
-      <p className="mt-3 text-sm leading-relaxed text-white/80">
+      <p className="mt-2 sm:mt-3 text-xs sm:text-sm leading-relaxed text-white/80">
         {item.text}
       </p>
     </div>
@@ -519,17 +529,17 @@ const Services = () => {
       {/* =====================================================
           CTA
       ===================================================== */}
-      <section className="bg-white px-5 py-20 md:px-10 md:py-28">
+      <section className="bg-white px-4 py-12 xs:px-6 xs:py-16 sm:px-10 sm:py-20 md:py-28">
         <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col gap-8 rounded-[32px] bg-[#F5F9FC] p-8 md:p-14 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-6 sm:gap-8 rounded-[22px] bg-[#F5F9FC] p-5 xs:p-8 md:p-14 lg:flex-row lg:items-center lg:justify-between xs:rounded-[32px]">
             <div className="max-w-2xl">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
                 Initiate Consultation
               </span>
-              <h2 className="mt-3 font-serif text-3xl font-light md:text-5xl">
+              <h2 className="mt-2 font-serif text-2xl font-light xs:mt-3 xs:text-3xl md:text-5xl">
                 Ready to review your development requirements?
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-slate-500 md:text-base">
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 xs:mt-4 xs:text-sm md:text-base">
                 Connect with our surveying engineers and approval specialists for a
                 preliminary project assessment.
               </p>
@@ -544,9 +554,9 @@ const Services = () => {
                 gap-2
                 rounded-full
                 bg-[#0066B4]
-                px-8
-                py-4
-                text-sm
+                px-6
+                py-3
+                text-xs
                 font-medium
                 text-white
                 shadow-lg
@@ -555,10 +565,13 @@ const Services = () => {
                 duration-300
                 hover:-translate-y-0.5
                 hover:bg-[#00528F]
+                xs:px-8
+                xs:py-4
+                xs:text-sm
               "
             >
               Consult an Engineer
-              <ArrowUpRight size={17} />
+              <ArrowUpRight size={16} className="xs:size-[17px]" />
             </a>
           </div>
         </div>
@@ -582,8 +595,9 @@ const Services = () => {
               items-center
               justify-center
               bg-[#17221D]/75
-              p-4
+              p-3
               backdrop-blur-md
+              xs:p-4
               md:p-8
             "
           >
@@ -601,9 +615,10 @@ const Services = () => {
                 max-w-2xl
                 flex-col
                 overflow-hidden
-                rounded-[28px]
+                rounded-[20px]
                 bg-white
                 shadow-2xl
+                xs:rounded-[28px]
               "
             >
               {/* CLOSE BUTTON */}
@@ -612,12 +627,12 @@ const Services = () => {
                 aria-label="Close modal"
                 className="
                   absolute
-                  right-5
-                  top-5
+                  right-3
+                  top-3
                   z-20
                   flex
-                  h-10
-                  w-10
+                  h-8
+                  w-8
                   items-center
                   justify-center
                   rounded-full
@@ -628,47 +643,51 @@ const Services = () => {
                   transition-all
                   hover:bg-[#0066B4]
                   hover:text-white
+                  xs:right-5
+                  xs:top-5
+                  xs:h-10
+                  xs:w-10
                 "
               >
-                <X size={18} />
+                <X size={17} className="xs:size-[18px]" />
               </button>
 
               {/* MODAL HERO IMAGE */}
-              <div className="relative h-60 w-full shrink-0 overflow-hidden bg-slate-900">
+              <div className="relative h-44 w-full shrink-0 overflow-hidden bg-slate-900 xs:h-52 sm:h-60">
                 <img
                   src={selectedService.image}
                   alt={selectedService.title}
                   className="h-full w-full object-cover opacity-90"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d2235]/90 via-[#0066B4]/30 to-transparent" />
-                <div className="absolute bottom-5 left-6 text-white">
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#7fc1f2]">
+                <div className="absolute bottom-4 left-4 text-white xs:bottom-5 xs:left-6">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#7fc1f2] xs:text-[11px]">
                     {selectedService.category} &bull; Spec {selectedService.number}
                   </span>
-                  <h3 className="mt-1 font-serif text-2xl font-light md:text-3xl">
+                  <h3 className="mt-1 font-serif text-xl font-light xs:text-2xl md:text-3xl">
                     {selectedService.title}
                   </h3>
                 </div>
               </div>
 
               {/* MODAL BODY */}
-              <div className="overflow-y-auto p-6 md:p-8">
-                <p className="text-sm leading-7 text-slate-600 md:text-base">
+              <div className="overflow-y-auto p-4 xs:p-6 md:p-8">
+                <p className="text-xs sm:text-sm leading-6 sm:leading-7 text-slate-600 md:text-base">
                   {selectedService.details}
                 </p>
 
                 {/* DELIVERABLES LIST */}
-                <div className="mt-6 rounded-2xl bg-[#F5F9FC] p-5">
-                  <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#0066B4]">
+                <div className="mt-5 rounded-2xl bg-[#F5F9FC] p-4 xs:mt-6 xs:p-5">
+                  <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#0066B4] xs:text-xs">
                     Key Deliverables & Documentation
                   </h4>
-                  <ul className="mt-4 space-y-2.5">
+                  <ul className="mt-3 space-y-2 xs:mt-4 xs:space-y-2.5">
                     {selectedService.deliverables?.map((item, idx) => (
                       <li
                         key={idx}
-                        className="flex items-center gap-3 text-xs font-medium text-slate-700 md:text-sm"
+                        className="flex items-center gap-2.5 text-xs font-medium text-slate-700 xs:gap-3 md:text-sm"
                       >
-                        <CheckCircle2 size={16} className="shrink-0 text-[#0066B4]" />
+                        <CheckCircle2 size={15} className="shrink-0 text-[#0066B4] xs:size-4" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -676,7 +695,7 @@ const Services = () => {
                 </div>
 
                 {/* ACTION BUTTON */}
-                <div className="mt-8 flex justify-end">
+                <div className="mt-6 flex justify-end xs:mt-8">
                   <a
                     href="/contact"
                     onClick={() => setSelectedService(null)}
@@ -686,8 +705,8 @@ const Services = () => {
                       gap-2
                       rounded-full
                       bg-[#0066B4]
-                      px-6
-                      py-3.5
+                      px-5
+                      py-2.5
                       text-xs
                       font-semibold
                       uppercase
@@ -695,6 +714,8 @@ const Services = () => {
                       text-white
                       transition-all
                       hover:bg-[#00528F]
+                      xs:px-6
+                      xs:py-3.5
                     "
                   >
                     Discuss This Service

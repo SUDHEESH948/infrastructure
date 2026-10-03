@@ -102,7 +102,7 @@ const OurProjects = () => {
           HERO
       ===================================================== */}
 
-      <section className="relative overflow-hidden bg-[#F5F9FC] px-5 pb-20 pt-36 md:px-10 md:pb-28 md:pt-44">
+      <section className="relative overflow-hidden bg-[#F5F9FC] px-4 pb-14 pt-24 xs:px-6 xs:pb-16 xs:pt-28 sm:px-10 sm:pb-20 sm:pt-36 md:pb-28 md:pt-44">
         <div className="mx-auto max-w-7xl">
 
           <motion.div
@@ -113,15 +113,15 @@ const OurProjects = () => {
               ease: [0.16, 1, 0.3, 1],
             }}
           >
-            <div className="mb-6 flex items-center gap-3">
-              <span className="h-px w-10 bg-[#0066B4]" />
+            <div className="mb-4 sm:mb-6 flex items-center gap-2.5 sm:gap-3">
+              <span className="h-px w-7 sm:w-10 bg-[#0066B4]" />
 
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-[#0066B4]">
+              <span className="text-[10px] sm:text-xs font-medium uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#0066B4]">
                 Our Projects
               </span>
             </div>
 
-            <h1 className="max-w-6xl font-serif text-5xl font-light leading-[0.95] tracking-tight md:text-7xl lg:text-8xl">
+            <h1 className="max-w-6xl font-serif text-3xl font-light leading-[0.98] tracking-tight xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl sm:leading-[0.95]">
               Projects that
               <br />
 
@@ -130,7 +130,7 @@ const OurProjects = () => {
               </span>
             </h1>
 
-            <p className="mt-8 max-w-2xl text-sm leading-7 text-slate-500 md:text-base">
+            <p className="mt-4 sm:mt-8 max-w-2xl text-xs sm:text-sm leading-6 sm:leading-7 text-slate-500 md:text-base">
               Explore the range of infrastructure, construction,
               surveying, and project management capabilities
               delivered by ONSET INFRA.
@@ -138,7 +138,7 @@ const OurProjects = () => {
           </motion.div>
         </div>
 
-        <div className="pointer-events-none absolute -right-10 bottom-0 select-none font-serif text-[180px] font-light leading-none text-[#0066B4]/[0.04] md:text-[280px]">
+        <div className="pointer-events-none absolute -right-6 bottom-0 select-none font-serif text-[120px] font-light leading-none text-[#0066B4]/[0.04] xs:text-[160px] sm:-right-10 sm:text-[220px] md:text-[280px]">
           03
         </div>
       </section>
@@ -147,19 +147,19 @@ const OurProjects = () => {
           PROJECTS
       ===================================================== */}
 
-      <section className="px-5 py-20 md:px-10 md:py-28">
+      <section className="px-4 py-12 xs:px-6 xs:py-16 sm:px-10 sm:py-20 md:py-28">
         <div className="mx-auto max-w-7xl">
 
           {/* HEADER */}
 
-          <div className="flex flex-col gap-8 border-b border-[#0066B4]/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-6 sm:gap-8 border-b border-[#0066B4]/10 pb-6 sm:pb-8 lg:flex-row lg:items-end lg:justify-between">
 
             <div>
-              <span className="text-xs uppercase tracking-[0.3em] text-[#0066B4]">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#0066B4]">
                 Selected Work
               </span>
 
-              <h2 className="mt-3 font-serif text-4xl font-light md:text-5xl">
+              <h2 className="mt-2 sm:mt-3 font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-light">
                 Our work
               </h2>
             </div>
@@ -175,11 +175,13 @@ const OurProjects = () => {
                     whitespace-nowrap
                     rounded-full
                     border
-                    px-4
-                    py-2
+                    px-3.5
+                    py-1.5
                     text-xs
                     transition-all
                     duration-300
+                    xs:px-4
+                    xs:py-2
                     ${
                       activeCategory === category
                         ? "border-[#0066B4] bg-[#0066B4] text-white"
@@ -228,7 +230,7 @@ const OurProjects = () => {
                     className="
                       group
                       overflow-hidden
-                      rounded-[28px]
+                      rounded-[20px]
                       border
                       border-[#0066B4]/10
                       bg-white
@@ -236,11 +238,12 @@ const OurProjects = () => {
                       transition-shadow
                       duration-500
                       hover:shadow-[0_25px_65px_rgba(0,102,180,0.14)]
+                      xs:rounded-[28px]
                     "
                   >
                     {/* IMAGE */}
 
-                    <div className="relative h-[260px] overflow-hidden bg-[#EAF2F7]">
+                    <div className="relative h-[180px] overflow-hidden bg-[#EAF2F7] xs:h-[220px] sm:h-[260px]">
                       <img
                         src={project.image}
                         alt={project.title}
@@ -258,43 +261,43 @@ const OurProjects = () => {
 
                       {/* NUMBER */}
 
-                      <div className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-xs font-semibold text-[#0066B4] shadow-lg backdrop-blur-md">
+                      <div className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[11px] font-semibold text-[#0066B4] shadow-lg backdrop-blur-md xs:left-5 xs:top-5 xs:h-10 xs:w-10 xs:text-xs">
                         {project.id}
                       </div>
 
                       {/* ICON */}
 
-                      <div className="absolute bottom-5 left-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 text-[#0066B4] shadow-xl backdrop-blur-md">
-                        <Icon size={21} strokeWidth={1.7} />
+                      <div className="absolute bottom-4 left-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/90 text-[#0066B4] shadow-xl backdrop-blur-md xs:bottom-5 xs:left-5 xs:h-12 xs:w-12">
+                        <Icon size={18} strokeWidth={1.7} className="xs:size-[21px]" />
                       </div>
 
                       {/* LOCATION */}
 
-                      <span className="absolute bottom-6 right-5 text-[10px] uppercase tracking-[0.2em] text-white/80">
+                      <span className="absolute bottom-5 right-4 text-[9px] uppercase tracking-[0.2em] text-white/80 xs:bottom-6 xs:right-5 xs:text-[10px]">
                         {project.location}
                       </span>
                     </div>
 
                     {/* CONTENT */}
 
-                    <div className="p-6">
+                    <div className="p-4 xs:p-5 sm:p-6">
 
                       <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#0066B4]/60">
                         {project.category}
                       </span>
 
-                      <h3 className="mt-3 font-serif text-2xl font-medium leading-tight text-[#17221D] transition-colors duration-300 group-hover:text-[#0066B4]">
+                      <h3 className="mt-2 font-serif text-xl font-medium leading-tight text-[#17221D] transition-colors duration-300 group-hover:text-[#0066B4] xs:mt-3 xs:text-2xl">
                         {project.title}
                       </h3>
 
-                      <p className="mt-3 text-sm leading-6 text-slate-500">
+                      <p className="mt-2 text-xs leading-5 text-slate-500 xs:mt-3 xs:text-sm xs:leading-6">
                         {project.description}
                       </p>
 
                       <button
                         onClick={() => setSelectedProject(project)}
                         className="
-                          mt-6
+                          mt-4
                           flex
                           items-center
                           gap-2
@@ -303,6 +306,7 @@ const OurProjects = () => {
                           uppercase
                           tracking-[0.15em]
                           text-[#0066B4]
+                          xs:mt-6
                         "
                       >
                         View Details
@@ -329,17 +333,17 @@ const OurProjects = () => {
           BLUE CTA
       ===================================================== */}
 
-      <section className="bg-[#0066B4] px-5 py-20 text-white md:px-10 md:py-28">
+      <section className="bg-[#0066B4] px-4 py-12 text-white xs:px-6 xs:py-16 sm:px-10 sm:py-20 md:py-28">
         <div className="mx-auto max-w-7xl">
 
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-end">
+          <div className="grid grid-cols-1 gap-6 sm:gap-10 lg:grid-cols-2 lg:items-end">
 
             <div>
-              <span className="text-xs uppercase tracking-[0.3em] text-white/60">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-white/60 sm:text-xs sm:tracking-[0.3em]">
                 Your Next Project
               </span>
 
-              <h2 className="mt-5 max-w-3xl font-serif text-4xl font-light leading-tight md:text-6xl">
+              <h2 className="mt-3 font-serif text-2xl font-light leading-tight xs:mt-5 xs:text-3xl sm:text-4xl md:text-6xl">
                 Let's turn your
                 <br />
                 vision into reality.
@@ -355,18 +359,21 @@ const OurProjects = () => {
                   gap-2
                   rounded-full
                   bg-white
-                  px-6
-                  py-3.5
-                  text-sm
+                  px-5
+                  py-2.5
+                  text-xs
                   font-medium
                   text-[#0066B4]
                   transition-all
                   duration-300
                   hover:-translate-y-1
+                  xs:px-6
+                  xs:py-3.5
+                  xs:text-sm
                 "
               >
                 Start a Project
-                <ArrowUpRight size={17} />
+                <ArrowUpRight size={16} className="xs:size-[17px]" />
               </a>
             </div>
 
@@ -381,7 +388,7 @@ const OurProjects = () => {
       <AnimatePresence>
         {selectedProject && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17221D]/70 px-5 py-8 backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17221D]/70 px-3 py-6 backdrop-blur-md xs:px-5 xs:py-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -413,9 +420,10 @@ const OurProjects = () => {
                 w-full
                 max-w-3xl
                 overflow-auto
-                rounded-[30px]
+                rounded-[20px]
                 bg-white
                 shadow-2xl
+                xs:rounded-[30px]
               "
             >
 
@@ -425,12 +433,12 @@ const OurProjects = () => {
                 onClick={() => setSelectedProject(null)}
                 className="
                   absolute
-                  right-5
-                  top-5
+                  right-3
+                  top-3
                   z-10
                   flex
-                  h-10
-                  w-10
+                  h-8
+                  w-8
                   items-center
                   justify-center
                   rounded-full
@@ -441,15 +449,19 @@ const OurProjects = () => {
                   transition-all
                   hover:bg-[#0066B4]
                   hover:text-white
+                  xs:right-5
+                  xs:top-5
+                  xs:h-10
+                  xs:w-10
                 "
                 aria-label="Close"
               >
-                <X size={19} />
+                <X size={17} className="xs:size-[19px]" />
               </button>
 
               {/* MODAL IMAGE */}
 
-              <div className="h-[280px] overflow-hidden md:h-[360px]">
+              <div className="h-[200px] overflow-hidden xs:h-[240px] md:h-[360px]">
                 <img
                   src={selectedProject.image}
                   alt={selectedProject.title}
@@ -459,24 +471,24 @@ const OurProjects = () => {
 
               {/* MODAL CONTENT */}
 
-              <div className="p-7 md:p-10">
+              <div className="p-5 xs:p-7 md:p-10">
 
-                <span className="text-xs font-medium uppercase tracking-[0.3em] text-[#0066B4]">
+                <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#0066B4] xs:text-xs xs:tracking-[0.3em]">
                   {selectedProject.category}
                 </span>
 
-                <h2 className="mt-3 font-serif text-3xl font-light md:text-5xl">
+                <h2 className="mt-2 font-serif text-2xl font-light xs:mt-3 xs:text-3xl md:text-5xl">
                   {selectedProject.title}
                 </h2>
 
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-500 md:text-base">
+                <p className="mt-3 max-w-2xl text-xs leading-6 text-slate-500 xs:mt-5 xs:text-sm xs:leading-7 md:text-base">
                   {selectedProject.description}
                 </p>
 
-                <div className="mt-8 flex items-center gap-3 border-t border-[#0066B4]/10 pt-6">
-                  <Map size={18} className="text-[#0066B4]" />
+                <div className="mt-6 flex items-center gap-2.5 border-t border-[#0066B4]/10 pt-4 xs:mt-8 xs:gap-3 xs:pt-6">
+                  <Map size={16} className="text-[#0066B4] xs:size-[18px]" />
 
-                  <span className="text-sm text-slate-500">
+                  <span className="text-xs text-slate-500 xs:text-sm">
                     Project Location:{" "}
                     <strong className="font-medium text-[#17221D]">
                       {selectedProject.location}

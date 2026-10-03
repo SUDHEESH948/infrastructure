@@ -2,23 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 
-import roadVideo from "../assets/road.mp4";
-import homeVideo from "../assets/home.mp4";
+import interiorVideo from "../assets/introe.mp4";
 
 const slides = [
   {
-    video: roadVideo,
-    eyebrow: "INFRASTRUCTURE • ENGINEERING",
-    quote: "Building the roads that move tomorrow.",
+    video: interiorVideo,
+    eyebrow: "INTERIOR DESIGN • ARCHITECTURE",
+    quote: "Designing spaces that inspire everyday living.",
     description:
-      "Precision-driven infrastructure designed to connect communities, cities, and opportunities.",
-  },
-  {
-    video: homeVideo,
-    eyebrow: "ARCHITECTURE • CONSTRUCTION",
-    quote: "Spaces built for the way we live.",
-    description:
-      "Thoughtful architecture and disciplined construction brought together to create lasting spaces.",
+      "Thoughtfully crafted interiors that blend modern aesthetics, functionality, and comfort to create beautiful spaces.",
   },
 ];
 
@@ -67,11 +59,6 @@ const Hero = () => {
         </AnimatePresence>
       </div>
 
-      {/* OVERLAYS */}
-      <div className="absolute inset-0 bg-[#0066B4]/30 mix-blend-multiply" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30 sm:to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/45" />
-
       {/* HERO CONTENT */}
       <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center px-4 sm:px-10 lg:px-16 pt-20 pb-12 sm:pt-24 sm:pb-20">
         <div className="mx-auto w-full max-w-7xl">
@@ -87,6 +74,7 @@ const Hero = () => {
                 className="mb-3 sm:mb-5 flex items-center gap-2 sm:gap-3"
               >
                 <span className="h-px w-5 sm:w-8 bg-white/70 shrink-0" />
+
                 <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] sm:tracking-[0.28em] text-white/90">
                   {slide.eyebrow}
                 </p>
