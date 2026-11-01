@@ -80,7 +80,7 @@ const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState(galleryItems);
 
-  // Fetch live gallery from backend API
+  // Fetch live gallery from backend API and auto-refresh on focus/updates
   useEffect(() => {
     let isMounted = true;
     const loadGallery = async () => {
@@ -95,9 +95,17 @@ const Gallery = () => {
         setItems(formatted);
       }
     };
+
     loadGallery();
+
+    const onFocus = () => loadGallery();
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(loadGallery, 6000);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
     };
   }, []);
 

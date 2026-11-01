@@ -112,7 +112,7 @@ const OurProjects = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectList, setProjectList] = useState(defaultProjects);
 
-  // Fetch live projects from backend API (with fallback to defaultProjects)
+  // Fetch live projects from backend API and auto-refresh on focus/updates
   useEffect(() => {
     let isMounted = true;
     const loadProjects = async () => {
@@ -134,8 +134,15 @@ const OurProjects = () => {
     };
 
     loadProjects();
+
+    const onFocus = () => loadProjects();
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(loadProjects, 6000);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
     };
   }, []);
 

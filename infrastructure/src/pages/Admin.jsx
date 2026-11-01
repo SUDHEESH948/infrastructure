@@ -134,22 +134,8 @@ export default function Admin() {
     }
   }, []);
 
-  // Fetch data when authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadAllData();
-    }
-  }, [isAuthenticated]);
-
-  const showNotification = (message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => {
-      setNotification(null);
-    }, 4000);
-  };
-
-  const loadAllData = async () => {
-    setLoading(true);
+  const loadAllData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const [projData, galData] = await Promise.all([
         fetchProjectsFromAPI(),
@@ -158,11 +144,37 @@ export default function Admin() {
       if (projData) setProjects(projData);
       if (galData) setGalleryItems(galData);
     } catch {
-      showNotification("Could not load latest data from API", "error");
+      if (!isSilent) {
+        showNotification("Could not load latest data from API", "error");
+      }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
+
+  // Fetch data and auto-refresh on any changes, window focus, and background interval
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Initial load
+    loadAllData(false);
+
+    // Auto-refresh when tab gains focus
+    const onFocus = () => {
+      loadAllData(true);
+    };
+    window.addEventListener("focus", onFocus);
+
+    // Background auto-refresh polling every 5 seconds
+    const interval = setInterval(() => {
+      loadAllData(true);
+    }, 5000);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
+    };
+  }, [isAuthenticated]);
 
   // Default Login Handler
   const handleLogin = async (e) => {
@@ -509,34 +521,13 @@ export default function Admin() {
           </div>
 
           {/* RIGHT ACTION BUTTONS */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
-            <Link
-              to="/projects"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-100 sm:px-3.5 sm:py-2 sm:text-xs"
-              title="Open public website in new tab"
-            >
-              <Eye size={13} className="text-[#0066B4]" />
-              <span className="hidden sm:inline">View Site</span>
-            </Link>
-
-            <button
-              onClick={loadAllData}
-              disabled={loading}
-              className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 sm:px-3 sm:py-2 sm:text-xs"
-              title="Refresh live data"
-            >
-              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-              <span className="hidden md:inline">Refresh</span>
-            </button>
-
+          <div className="flex items-center gap-2">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-100 sm:px-3.5 sm:py-2 sm:text-xs"
+              className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 active:scale-95"
               title="Log out from dashboard"
             >
-              <LogOut size={13} />
+              <LogOut size={14} />
               <span>Sign Out</span>
             </button>
           </div>
