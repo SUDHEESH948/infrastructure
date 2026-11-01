@@ -21,6 +21,7 @@ import {
   X,
   ArrowLeft,
   Search,
+  UploadCloud,
 } from "lucide-react";
 import {
   fetchProjectsFromAPI,
@@ -31,6 +32,7 @@ import {
   createGalleryItemAPI,
   deleteGalleryItemAPI,
   loginAdminAPI,
+  uploadImageAPI,
 } from "../services/api";
 
 const PROJECT_CATEGORIES = [
@@ -118,6 +120,51 @@ export default function Admin() {
     category: "Infrastructure",
     image: "",
   });
+
+  // Upload States
+  const [projectUploading, setProjectUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+
+  // Upload Handlers (Save images directly to backend/uploads folder)
+  const handleProjectImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setProjectUploading(true);
+    try {
+      const res = await uploadImageAPI(file, "projects");
+      if (res?.url) {
+        setProjectForm((prev) => ({ ...prev, image: res.url }));
+        showNotification("Project image stored in folder: " + res.url);
+      }
+    } catch (err) {
+      showNotification(err.message || "Failed to upload image", "error");
+    } finally {
+      setProjectUploading(false);
+    }
+  };
+
+  const handleGalleryImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setGalleryUploading(true);
+    try {
+      const res = await uploadImageAPI(file, "gallery");
+      if (res?.url) {
+        setGalleryForm((prev) => ({
+          ...prev,
+          image: res.url,
+          title: prev.title || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+        }));
+        showNotification("Gallery image stored in folder: " + res.url);
+      }
+    } catch (err) {
+      showNotification(err.message || "Failed to upload image", "error");
+    } finally {
+      setGalleryUploading(false);
+    }
+  };
 
   // Check saved login on mount
   useEffect(() => {
@@ -952,15 +999,52 @@ export default function Admin() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Image Path or URL
+                  Project Image (Upload to Folder or Custom Path)
                 </label>
-                <input
-                  type="text"
-                  value={projectForm.image}
-                  onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
-                  placeholder="/projects/building-construction.jpg or https://..."
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                />
+
+                <div className="mt-1 flex flex-col gap-2 rounded-2xl border border-dashed border-[#0066B4]/30 bg-[#EDF5FA]/60 p-3.5 transition hover:border-[#0066B4]">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F]">
+                      <UploadCloud size={15} />
+                      <span>{projectUploading ? "Uploading..." : "Upload Image to Folder"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={projectUploading}
+                        onChange={handleProjectImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <span className="text-[10px] text-slate-500">
+                      Stores to: <code className="rounded bg-white px-1.5 py-0.5 font-semibold text-[#0066B4]">backend/uploads/projects</code>
+                    </span>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={projectForm.image}
+                    onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
+                    placeholder="/projects/building-construction.jpg or /uploads/projects/..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  />
+
+                  {projectForm.image && (
+                    <div className="flex items-center gap-3 pt-1">
+                      <img
+                        src={projectForm.image}
+                        alt="Project preview"
+                        className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                      <span className="max-w-xs truncate text-[11px] text-slate-600">
+                        {projectForm.image}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -1075,16 +1159,37 @@ export default function Admin() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Image URL *
+                  Gallery Image (Upload to Folder or URL) *
                 </label>
-                <input
-                  type="url"
-                  required
-                  value={galleryForm.image}
-                  onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                />
+
+                <div className="mt-1 flex flex-col gap-2 rounded-2xl border border-dashed border-[#0066B4]/30 bg-[#EDF5FA]/60 p-3.5 transition hover:border-[#0066B4]">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F]">
+                      <UploadCloud size={15} />
+                      <span>{galleryUploading ? "Uploading..." : "Upload Image to Folder"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={galleryUploading}
+                        onChange={handleGalleryImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <span className="text-[10px] text-slate-500">
+                      Stores to: <code className="rounded bg-white px-1.5 py-0.5 font-semibold text-[#0066B4]">backend/uploads/gallery</code>
+                    </span>
+                  </div>
+
+                  <input
+                    type="text"
+                    required
+                    value={galleryForm.image}
+                    onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })}
+                    placeholder="/uploads/gallery/... or https://..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  />
+                </div>
               </div>
 
               {/* QUICK STOCK PRESETS */}

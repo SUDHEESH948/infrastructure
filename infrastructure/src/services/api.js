@@ -3,6 +3,27 @@
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 /* =========================================================
+   IMAGE UPLOAD API (Stores images into server folder)
+========================================================= */
+
+export const uploadImageAPI = async (file, folder = "general") => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await fetch(`${API_BASE}/upload?folder=${encodeURIComponent(folder)}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || "Failed to upload image file");
+  }
+
+  return response.json();
+};
+
+/* =========================================================
    PROJECTS API
 ========================================================= */
 
