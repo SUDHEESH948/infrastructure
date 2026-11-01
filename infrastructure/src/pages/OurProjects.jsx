@@ -17,8 +17,25 @@ import surveyProjectImg from "../assets/projects/land-site-survey.jpg";
 import managementProjectImg from "../assets/projects/project-management.jpg";
 import nhaiProjectImg from "../assets/projects/nhai-access.jpg";
 import valuationProjectImg from "../assets/projects/estimation-valuation.jpg";
+import { fetchProjectsFromAPI } from "../services/api";
 
-const projects = [
+const iconMap = {
+  Route,
+  Building2,
+  Map,
+  HardHat,
+};
+
+const imageMap = {
+  "01": roadProjectImg,
+  "02": buildingProjectImg,
+  "03": surveyProjectImg,
+  "04": managementProjectImg,
+  "05": nhaiProjectImg,
+  "06": valuationProjectImg,
+};
+
+const defaultProjects = [
   {
     id: "01",
     category: "Infrastructure",
@@ -93,6 +110,34 @@ const categories = [
 const OurProjects = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedProject, setSelectedProject] = useState(null);
+  const [projectList, setProjectList] = useState(defaultProjects);
+
+  // Fetch live projects from backend API (with fallback to defaultProjects)
+  useEffect(() => {
+    let isMounted = true;
+    const loadProjects = async () => {
+      const apiProjects = await fetchProjectsFromAPI();
+      if (isMounted && apiProjects && apiProjects.length > 0) {
+        const formatted = apiProjects.map((p) => ({
+          id: p.projectId || p.id,
+          category: p.category,
+          title: p.title,
+          description: p.description,
+          details: p.details,
+          location: p.location,
+          deliverables: p.deliverables || [],
+          icon: iconMap[p.iconName] || Building2,
+          image: imageMap[p.projectId || p.id] || p.image || buildingProjectImg,
+        }));
+        setProjectList(formatted);
+      }
+    };
+
+    loadProjects();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Lock background scroll on open
   useEffect(() => {
@@ -117,8 +162,8 @@ const OurProjects = () => {
 
   const filteredProjects =
     activeCategory === "All"
-      ? projects
-      : projects.filter(
+      ? projectList
+      : projectList.filter(
           (project) => project.category === activeCategory
         );
 

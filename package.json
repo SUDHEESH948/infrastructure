@@ -1,4 +1,12 @@
 {
+  "name": "infrastructure-root",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "start:backend": "cd backend && npm start",
+    "seed": "cd backend && npm run seed",
+    "dev:frontend": "cd infrastructure && npm run dev"
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "tailwindcss": "^4.3.3"
