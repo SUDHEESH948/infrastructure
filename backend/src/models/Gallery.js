@@ -36,3 +36,4 @@ const gallerySchema = new mongoose.Schema(
 );
 
 export default mongoose.model("Gallery", gallerySchema);
+

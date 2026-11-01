@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Lock,
   User,
@@ -18,6 +19,8 @@ import {
   Sparkles,
   Eye,
   X,
+  ArrowLeft,
+  Search,
 } from "lucide-react";
 import {
   fetchProjectsFromAPI,
@@ -31,6 +34,7 @@ import {
 } from "../services/api";
 
 const PROJECT_CATEGORIES = [
+  "All",
   "Infrastructure",
   "Construction",
   "Surveying",
@@ -40,6 +44,7 @@ const PROJECT_CATEGORIES = [
 ];
 
 const GALLERY_CATEGORIES = [
+  "All",
   "Infrastructure",
   "Construction",
   "Surveying",
@@ -80,6 +85,9 @@ export default function Admin() {
 
   // Active Tab: "projects" | "gallery"
   const [activeTab, setActiveTab] = useState("projects");
+  const [projectFilterCategory, setProjectFilterCategory] = useState("All");
+  const [galleryFilterCategory, setGalleryFilterCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Data States
   const [projects, setProjects] = useState([]);
@@ -149,7 +157,7 @@ export default function Admin() {
       ]);
       if (projData) setProjects(projData);
       if (galData) setGalleryItems(galData);
-    } catch (err) {
+    } catch {
       showNotification("Could not load latest data from API", "error");
     } finally {
       setLoading(false);
@@ -311,44 +319,65 @@ export default function Admin() {
     }
   };
 
+  // Filtered Projects
+  const filteredProjects = projects.filter((p) => {
+    const matchesCategory =
+      projectFilterCategory === "All" || p.category === projectFilterCategory;
+    const matchesSearch =
+      !searchQuery ||
+      p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Filtered Gallery Items
+  const filteredGallery = galleryItems.filter((g) => {
+    const matchesCategory =
+      galleryFilterCategory === "All" || g.category === galleryFilterCategory;
+    const matchesSearch =
+      !searchQuery || g.title?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
   /* =========================================================
-     RENDER: LOGIN VIEW (Default Admin Screen)
+     LOGIN SCREEN (Default Admin Page)
   ========================================================= */
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#071b2d] via-[#092942] to-[#0066B4] px-4 py-16 text-[#17221D]">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#071b2d] via-[#092942] to-[#0066B4] p-4 text-[#17221D]">
         <motion.div
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md overflow-hidden rounded-[28px] border border-white/15 bg-white/95 p-8 shadow-2xl backdrop-blur-xl sm:p-10"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md overflow-hidden rounded-3xl border border-white/20 bg-white/95 p-6 shadow-2xl backdrop-blur-xl sm:p-9"
         >
           {/* LOGO & TITLE */}
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0066B4] text-white shadow-lg shadow-[#0066B4]/30">
-              <Lock size={26} />
+            <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-2xl bg-[#0066B4] text-white shadow-lg shadow-[#0066B4]/30 sm:h-14 sm:w-14">
+              <Lock size={24} className="sm:size-7" />
             </div>
             <h1 className="mt-4 font-serif text-2xl font-light text-[#071b2d] sm:text-3xl">
               Onset Infra Admin
             </h1>
             <p className="mt-1 text-xs text-slate-500">
-              Manage projects, gallery imagery, and website content
+              Administrative portal to manage projects & gallery
             </p>
           </div>
 
           {/* ERROR ALERT */}
           {loginError && (
-            <div className="mt-5 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-600 border border-red-200">
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-600 border border-red-200">
               <AlertCircle size={16} className="shrink-0" />
               <span>{loginError}</span>
             </div>
           )}
 
-          {/* FORM */}
-          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          {/* LOGIN FORM */}
+          <form onSubmit={handleLogin} className="mt-5 space-y-3.5 sm:space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600">
-                Admin Email or Username
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                Email / Username
               </label>
               <div className="relative">
                 <User size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
@@ -358,13 +387,13 @@ export default function Admin() {
                   placeholder="admin@onsetinfra.com"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-xs sm:text-sm text-slate-900 outline-none transition-all focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-600">
                 Password
               </label>
               <div className="relative">
@@ -375,7 +404,7 @@ export default function Admin() {
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-xs sm:text-sm text-slate-900 outline-none transition-all focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
                 />
               </div>
             </div>
@@ -383,11 +412,11 @@ export default function Admin() {
             <button
               type="submit"
               disabled={loginLoading}
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0066B4] py-3.5 text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-[#0066B4]/25 transition-all hover:bg-[#00528F] active:scale-[0.99] disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0066B4] py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-[#0066B4]/25 transition-all hover:bg-[#00528F] active:scale-[0.99] disabled:opacity-50"
             >
               {loginLoading ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" />
+                  <RefreshCw size={15} className="animate-spin" />
                   Verifying...
                 </>
               ) : (
@@ -397,9 +426,9 @@ export default function Admin() {
           </form>
 
           {/* DEFAULT CREDENTIALS HELPER */}
-          <div className="mt-6 rounded-2xl border border-[#0066B4]/15 bg-[#EDF5FA] p-4 text-xs text-slate-700">
+          <div className="mt-5 rounded-2xl border border-[#0066B4]/15 bg-[#EDF5FA] p-3.5 sm:p-4 text-xs text-slate-700">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-[#0066B4] uppercase tracking-wider text-[11px]">
+              <span className="font-semibold text-[#0066B4] uppercase tracking-wider text-[10px] sm:text-[11px]">
                 Default Admin Credentials
               </span>
               <button
@@ -415,16 +444,26 @@ export default function Admin() {
               <p>Password: <strong className="text-slate-800">admin123</strong></p>
             </div>
           </div>
+
+          <div className="mt-5 text-center">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 transition hover:text-[#0066B4]"
+            >
+              <ArrowLeft size={14} />
+              Back to Public Website
+            </Link>
+          </div>
         </motion.div>
       </div>
     );
   }
 
   /* =========================================================
-     RENDER: AUTHENTICATED ADMIN DASHBOARD
+     AUTHENTICATED ADMIN DASHBOARD (Fully Responsive)
   ========================================================= */
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 pt-24 text-[#17221D] sm:pt-28 md:pt-32">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#17221D]">
       {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {notification && (
@@ -432,293 +471,418 @@ export default function Admin() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`fixed right-5 top-20 z-[999999] flex items-center gap-2.5 rounded-2xl px-5 py-3.5 shadow-xl text-xs font-medium text-white ${
+            className={`fixed right-3 sm:right-6 top-4 z-[999999] flex items-center gap-2 rounded-2xl px-4 py-3 shadow-2xl text-xs font-medium text-white ${
               notification.type === "error" ? "bg-red-600" : "bg-[#0066B4]"
             }`}
           >
             {notification.type === "error" ? (
-              <AlertCircle size={17} />
+              <AlertCircle size={16} />
             ) : (
-              <CheckCircle2 size={17} />
+              <CheckCircle2 size={16} />
             )}
             <span>{notification.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* HEADER BAR */}
-        <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#0066B4]">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Administrative Control Panel
+      {/* DEDICATED ADMIN HEADER (Replaces standard public Navigation) */}
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 sm:py-3.5">
+          {/* BRAND */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0066B4] font-bold text-white shadow-sm sm:h-10 sm:w-10">
+              OI
             </div>
-            <h1 className="mt-1 font-serif text-2xl font-light text-slate-900 sm:text-3xl">
-              Website Content Manager
-            </h1>
-            <p className="text-xs text-slate-500">
-              Signed in as <span className="font-semibold text-slate-700">{currentUser?.email}</span>
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold tracking-wider text-slate-900 sm:text-base">
+                  ONSET INFRA
+                </span>
+                <span className="rounded-full bg-[#0066B4]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#0066B4]">
+                  Admin
+                </span>
+              </div>
+              <p className="hidden text-[10px] uppercase tracking-widest text-slate-400 xs:block">
+                Engineers & Interior Designers
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* RIGHT ACTION BUTTONS */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            <Link
+              to="/projects"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-100 sm:px-3.5 sm:py-2 sm:text-xs"
+              title="Open public website in new tab"
+            >
+              <Eye size={13} className="text-[#0066B4]" />
+              <span className="hidden sm:inline">View Site</span>
+            </Link>
+
             <button
               onClick={loadAllData}
               disabled={loading}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+              className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 sm:px-3 sm:py-2 sm:text-xs"
+              title="Refresh live data"
             >
-              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-              Refresh
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              <span className="hidden md:inline">Refresh</span>
             </button>
-
-            <a
-              href="/projects"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-            >
-              <Eye size={14} />
-              View Site
-            </a>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100"
+              className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-100 sm:px-3.5 sm:py-2 sm:text-xs"
+              title="Log out from dashboard"
             >
-              <LogOut size={14} />
-              Sign Out
+              <LogOut size={13} />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
+      </header>
 
-        {/* METRICS / STATS BAR */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-semibold uppercase tracking-wider">Total Projects</span>
-              <Layers size={18} className="text-[#0066B4]" />
+      {/* MAIN DASHBOARD CONTENT */}
+      <main className="mx-auto max-w-7xl px-3.5 py-4 xs:px-5 xs:py-6 sm:px-6 sm:py-8">
+        {/* WELCOME / SUMMARY BANNER */}
+        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-[#0066B4]">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Administrative Workspace
+              </div>
+              <h1 className="mt-1 font-serif text-2xl font-light text-slate-900 xs:text-3xl sm:text-4xl">
+                Website Content Manager
+              </h1>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Logged in as <strong className="text-slate-700">{currentUser?.email}</strong>
+              </p>
             </div>
-            <p className="mt-2 font-serif text-3xl font-light text-slate-900">{projects.length}</p>
-            <span className="text-[11px] text-slate-400">Live on /projects</span>
+
+            {/* QUICK ACTION BUTTON */}
+            <div className="flex items-center gap-2">
+              {activeTab === "projects" ? (
+                <button
+                  onClick={openAddProjectModal}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0066B4] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/20 transition hover:bg-[#00528F] sm:w-auto"
+                >
+                  <Plus size={16} />
+                  Add Project
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsGalleryModalOpen(true)}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0066B4] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/20 transition hover:bg-[#00528F] sm:w-auto"
+                >
+                  <Plus size={16} />
+                  Add Gallery Image
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-semibold uppercase tracking-wider">Gallery Images</span>
-              <ImageIcon size={18} className="text-[#0066B4]" />
+          {/* STATS TILES */}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-3.5 sm:p-4">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
+                  Projects
+                </span>
+                <Layers size={16} className="text-[#0066B4]" />
+              </div>
+              <p className="mt-1 font-serif text-2xl font-light text-slate-900 sm:text-3xl">
+                {projects.length}
+              </p>
+              <span className="text-[10px] text-slate-400">Live on /projects</span>
             </div>
-            <p className="mt-2 font-serif text-3xl font-light text-slate-900">{galleryItems.length}</p>
-            <span className="text-[11px] text-slate-400">Displayed in Home Gallery</span>
-          </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between text-slate-500">
-              <span className="text-xs font-semibold uppercase tracking-wider">Database Status</span>
-              <Sparkles size={18} className="text-emerald-500" />
+            <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-3.5 sm:p-4">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
+                  Gallery
+                </span>
+                <ImageIcon size={16} className="text-[#0066B4]" />
+              </div>
+              <p className="mt-1 font-serif text-2xl font-light text-slate-900 sm:text-3xl">
+                {galleryItems.length}
+              </p>
+              <span className="text-[10px] text-slate-400">Home visual archive</span>
             </div>
-            <p className="mt-2 text-sm font-semibold text-emerald-600">Active & Operational</p>
-            <span className="text-[11px] text-slate-400">MongoDB Atlas & API synced</span>
+
+            <div className="col-span-2 rounded-2xl border border-slate-100 bg-[#F8FAFC] p-3.5 sm:col-span-1 sm:p-4">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
+                  API & Database
+                </span>
+                <Sparkles size={16} className="text-emerald-500" />
+              </div>
+              <p className="mt-1 text-xs font-bold text-emerald-600 sm:text-sm">
+                Connected & Ready
+              </p>
+              <span className="text-[10px] text-slate-400">Synced across frontend</span>
+            </div>
           </div>
         </div>
 
-        {/* TAB NAVIGATION & ACTION BAR */}
-        <div className="mt-8 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
+        {/* TABS & SEARCH BAR */}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* TAB BUTTONS */}
+          <div className="flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
             <button
-              onClick={() => setActiveTab("projects")}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
+              onClick={() => {
+                setActiveTab("projects");
+                setSearchQuery("");
+              }}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wider transition ${
                 activeTab === "projects"
-                  ? "bg-[#0066B4] text-white shadow-md shadow-[#0066B4]/20"
-                  : "bg-white text-slate-600 hover:bg-slate-100"
+                  ? "bg-[#0066B4] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <FolderPlus size={16} />
+              <FolderPlus size={15} />
               Projects ({projects.length})
             </button>
 
             <button
-              onClick={() => setActiveTab("gallery")}
-              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition ${
+              onClick={() => {
+                setActiveTab("gallery");
+                setSearchQuery("");
+              }}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wider transition ${
                 activeTab === "gallery"
-                  ? "bg-[#0066B4] text-white shadow-md shadow-[#0066B4]/20"
-                  : "bg-white text-slate-600 hover:bg-slate-100"
+                  ? "bg-[#0066B4] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <ImageIcon size={16} />
-              Gallery Images ({galleryItems.length})
+              <ImageIcon size={15} />
+              Gallery ({galleryItems.length})
             </button>
           </div>
 
-          <div>
-            {activeTab === "projects" ? (
+          {/* SEARCH INPUT */}
+          <div className="relative w-full sm:w-64">
+            <Search size={15} className="absolute left-3.5 top-3 text-slate-400" />
+            <input
+              type="text"
+              placeholder={`Search ${activeTab}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-900 outline-none transition focus:border-[#0066B4] focus:ring-2 focus:ring-[#0066B4]/10"
+            />
+            {searchQuery && (
               <button
-                onClick={openAddProjectModal}
-                className="flex items-center gap-2 rounded-xl bg-[#0066B4] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/25 transition hover:bg-[#00528F]"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600"
               >
-                <Plus size={16} />
-                Add New Project
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsGalleryModalOpen(true)}
-                className="flex items-center gap-2 rounded-xl bg-[#0066B4] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/25 transition hover:bg-[#00528F]"
-              >
-                <Plus size={16} />
-                Add Gallery Image
+                ✕
               </button>
             )}
           </div>
         </div>
 
+        {/* CATEGORY FILTER CHIPS */}
+        <div className="mt-4 flex max-w-full gap-1.5 overflow-x-auto pb-1">
+          {activeTab === "projects"
+            ? PROJECT_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setProjectFilterCategory(cat)}
+                  className={`whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+                    projectFilterCategory === cat
+                      ? "border-[#0066B4] bg-[#0066B4] text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))
+            : GALLERY_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setGalleryFilterCategory(cat)}
+                  className={`whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+                    galleryFilterCategory === cat
+                      ? "border-[#0066B4] bg-[#0066B4] text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+        </div>
+
         {/* =====================================================
-            TAB 1: PROJECTS LIST
+            TAB 1: PROJECTS LIST VIEW
         ===================================================== */}
         {activeTab === "projects" && (
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((proj) => (
-              <div
-                key={proj.projectId || proj.id || proj._id}
-                className="flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-              >
-                <div>
-                  <div className="relative h-44 w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={proj.image || "/projects/building-construction.jpg"}
-                      alt={proj.title}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "/projects/building-construction.jpg";
-                      }}
-                    />
-                    <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2.5 py-1 text-[10px] font-bold text-[#0066B4] backdrop-blur-sm">
-                      {proj.projectId || proj.id}
-                    </span>
-                    <span className="absolute right-3 top-3 rounded-full bg-[#071b2d]/80 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-                      {proj.category}
-                    </span>
-                  </div>
+          <div className="mt-5">
+            {filteredProjects.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+                <FolderPlus size={32} className="mx-auto text-slate-300" />
+                <p className="mt-2 text-sm font-medium text-slate-600">No projects found</p>
+                <p className="text-xs text-slate-400">Try changing your search or category filter</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredProjects.map((proj) => (
+                  <div
+                    key={proj.projectId || proj.id || proj._id}
+                    className="flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition hover:shadow-md"
+                  >
+                    <div>
+                      {/* CARD IMAGE */}
+                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
+                        <img
+                          src={proj.image || "/projects/building-construction.jpg"}
+                          alt={proj.title}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "/projects/building-construction.jpg";
+                          }}
+                        />
+                        <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 font-mono text-[10px] font-bold text-[#0066B4] shadow-sm backdrop-blur-sm">
+                          {proj.projectId || proj.id}
+                        </span>
+                        <span className="absolute right-3 top-3 rounded-full bg-[#071b2d]/85 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+                          {proj.category}
+                        </span>
+                      </div>
 
-                  <div className="p-5">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                      <MapPin size={13} className="text-[#0066B4]" />
-                      <span>{proj.location || "Kerala"}</span>
+                      {/* CARD CONTENT */}
+                      <div className="p-4 sm:p-5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+                          <MapPin size={13} className="text-[#0066B4]" />
+                          <span>{proj.location || "Kerala"}</span>
+                        </div>
+
+                        <h3 className="mt-1 font-serif text-base font-normal leading-snug text-slate-900 sm:text-lg">
+                          {proj.title}
+                        </h3>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-500 line-clamp-2">
+                          {proj.description}
+                        </p>
+
+                        {proj.deliverables && proj.deliverables.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1">
+                            {proj.deliverables.slice(0, 2).map((d, i) => (
+                              <span
+                                key={i}
+                                className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
+                              >
+                                ✓ {d}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <h3 className="mt-1 font-serif text-lg font-medium text-slate-900">
-                      {proj.title}
-                    </h3>
-                    <p className="mt-1.5 text-xs leading-relaxed text-slate-500 line-clamp-2">
-                      {proj.description}
-                    </p>
+                    {/* ACTIONS ROW */}
+                    <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/70 p-3.5 sm:p-4">
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        {proj.status || "Completed"}
+                      </span>
 
-                    {proj.deliverables && proj.deliverables.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {proj.deliverables.slice(0, 2).map((d, i) => (
-                          <span
-                            key={i}
-                            className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
-                          >
-                            ✓ {d}
-                          </span>
-                        ))}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditProjectModal(proj)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-[#0066B4] hover:text-[#0066B4]"
+                          title="Edit project"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProject(proj)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-red-500 transition hover:border-red-500 hover:bg-red-50"
+                          title="Delete project"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 p-4">
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                    {proj.status || "Completed"}
-                  </span>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openEditProjectModal(proj)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-[#0066B4] hover:text-[#0066B4]"
-                      title="Edit project"
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProject(proj)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-red-500 transition hover:border-red-500 hover:bg-red-50"
-                      title="Delete project"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
 
         {/* =====================================================
-            TAB 2: GALLERY LIST
+            TAB 2: GALLERY LIST VIEW
         ===================================================== */}
         {activeTab === "gallery" && (
-          <div className="mt-6">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {galleryItems.map((item) => (
-                <div
-                  key={item.galleryId || item.id || item._id}
-                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-                >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-80" />
+          <div className="mt-5">
+            {filteredGallery.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+                <ImageIcon size={32} className="mx-auto text-slate-300" />
+                <p className="mt-2 text-sm font-medium text-slate-600">No gallery images found</p>
+                <p className="text-xs text-slate-400">Click &ldquo;Add Gallery Image&rdquo; to add photography</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {filteredGallery.map((item) => (
+                  <div
+                    key={item.galleryId || item.id || item._id}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+                  >
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                    <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7fc1f2]">
-                        {item.category}
-                      </span>
-                      <h4 className="mt-0.5 text-xs font-semibold leading-tight line-clamp-1">
-                        {item.title}
-                      </h4>
+                      <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
+                        <span className="text-[9px] font-semibold uppercase tracking-wider text-[#7fc1f2]">
+                          {item.category}
+                        </span>
+                        <h4 className="text-xs font-medium leading-tight line-clamp-1">
+                          {item.title}
+                        </h4>
+                      </div>
+
+                      {/* DELETE BUTTON (Always visible for touch responsiveness) */}
+                      <button
+                        onClick={() => handleDeleteGallery(item)}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-600/90 text-white shadow-md backdrop-blur-sm transition hover:bg-red-700"
+                        title="Delete gallery image"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
-
-                    <button
-                      onClick={() => handleDeleteGallery(item)}
-                      className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-red-600/90 text-white shadow-md backdrop-blur-sm transition hover:bg-red-700"
-                      title="Delete gallery image"
-                    >
-                      <Trash2 size={13} />
-                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </main>
 
       {/* =====================================================
-          MODAL: ADD / EDIT PROJECT
+          MODAL: ADD / EDIT PROJECT (Fully Mobile Responsive)
       ===================================================== */}
       {isProjectModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="relative my-8 w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-sm overflow-y-auto">
+          <div className="relative my-auto w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:p-8">
             <button
               onClick={() => setIsProjectModalOpen(false)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-slate-700"
+              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 sm:right-6 sm:top-6"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <h2 className="font-serif text-2xl font-light text-slate-900">
+            <h2 className="font-serif text-xl font-light text-slate-900 sm:text-2xl">
               {editingProject ? "Edit Project Details" : "Add New Project"}
             </h2>
             <p className="text-xs text-slate-500">
-              Changes will update live across the website and in MongoDB.
+              Synced directly to the website and MongoDB database.
             </p>
 
-            <form onSubmit={handleSaveProject} className="mt-6 space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <form onSubmit={handleSaveProject} className="mt-5 space-y-3.5 sm:space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-600">
                     Project Title *
@@ -729,7 +893,7 @@ export default function Admin() {
                     value={projectForm.title}
                     onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
                     placeholder="e.g. Kannur Multi-Speciality Complex"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4] focus:ring-2 focus:ring-[#0066B4]/10"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                   />
                 </div>
 
@@ -740,16 +904,16 @@ export default function Admin() {
                   <select
                     value={projectForm.category}
                     onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                   >
-                    {PROJECT_CATEGORIES.map((cat) => (
+                    {PROJECT_CATEGORIES.filter((c) => c !== "All").map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-600">
                     Location
@@ -759,7 +923,7 @@ export default function Admin() {
                     value={projectForm.location}
                     onChange={(e) => setProjectForm({ ...projectForm, location: e.target.value })}
                     placeholder="e.g. Kannur / Kerala"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                   />
                 </div>
 
@@ -770,7 +934,7 @@ export default function Admin() {
                   <select
                     value={projectForm.status}
                     onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                   >
                     <option value="Completed">Completed</option>
                     <option value="Ongoing">Ongoing</option>
@@ -785,7 +949,7 @@ export default function Admin() {
                   <select
                     value={projectForm.iconName}
                     onChange={(e) => setProjectForm({ ...projectForm, iconName: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                   >
                     <option value="Building2">Building</option>
                     <option value="Route">Highway / Road</option>
@@ -797,41 +961,41 @@ export default function Admin() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Image Path / URL
+                  Image Path or URL
                 </label>
                 <input
                   type="text"
                   value={projectForm.image}
                   onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
                   placeholder="/projects/building-construction.jpg or https://..."
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Short Summary *
+                  Short Card Summary *
                 </label>
                 <textarea
                   rows="2"
                   required
                   value={projectForm.description}
                   onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                  placeholder="A concise overview of the project shown on cards..."
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  placeholder="Concise overview shown on project directory cards..."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Detailed Scope & Engineering Specifications
+                  Detailed Scope & Specifications
                 </label>
                 <textarea
                   rows="3"
                   value={projectForm.details}
                   onChange={(e) => setProjectForm({ ...projectForm, details: e.target.value })}
                   placeholder="Detailed breakdown shown inside the project popup modal..."
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 />
               </div>
 
@@ -844,11 +1008,11 @@ export default function Admin() {
                   value={projectForm.deliverables}
                   onChange={(e) => setProjectForm({ ...projectForm, deliverables: e.target.value })}
                   placeholder="Turnkey civil contracting&#10;Structural safety compliance&#10;Stormwater drainage"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-3">
+              <div className="flex flex-col-reverse justify-end gap-2 pt-2 sm:flex-row sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setIsProjectModalOpen(false)}
@@ -869,26 +1033,26 @@ export default function Admin() {
       )}
 
       {/* =====================================================
-          MODAL: ADD GALLERY IMAGE
+          MODAL: ADD GALLERY IMAGE (Fully Mobile Responsive)
       ===================================================== */}
       {isGalleryModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="relative my-8 w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-sm overflow-y-auto">
+          <div className="relative my-auto w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:p-8">
             <button
               onClick={() => setIsGalleryModalOpen(false)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-slate-700"
+              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 sm:right-6 sm:top-6"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <h2 className="font-serif text-2xl font-light text-slate-900">
+            <h2 className="font-serif text-xl font-light text-slate-900 sm:text-2xl">
               Add Gallery Image
             </h2>
             <p className="text-xs text-slate-500">
-              Add new photography directly to the Home Visual Gallery.
+              Publish photography to the home visual gallery archive.
             </p>
 
-            <form onSubmit={handleSaveGallery} className="mt-6 space-y-4">
+            <form onSubmit={handleSaveGallery} className="mt-5 space-y-3.5 sm:space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
                   Image Title *
@@ -898,8 +1062,8 @@ export default function Admin() {
                   required
                   value={galleryForm.title}
                   onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })}
-                  placeholder="e.g. Modern Bridge Foundation Paving"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  placeholder="e.g. Modern Expressway Tarring"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 />
               </div>
 
@@ -910,9 +1074,9 @@ export default function Admin() {
                 <select
                   value={galleryForm.category}
                   onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 >
-                  {GALLERY_CATEGORIES.map((cat) => (
+                  {GALLERY_CATEGORIES.filter((c) => c !== "All").map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
@@ -928,11 +1092,11 @@ export default function Admin() {
                   value={galleryForm.image}
                   onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
                 />
               </div>
 
-              {/* QUICK PRESETS */}
+              {/* QUICK STOCK PRESETS */}
               <div>
                 <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Quick Image Presets
@@ -951,13 +1115,13 @@ export default function Admin() {
                       }
                       className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600 hover:border-[#0066B4] hover:text-[#0066B4]"
                     >
-                      {preset.category}: {preset.title.split(" ")[0]}
+                      {preset.category}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* PREVIEW */}
+              {/* LIVE PREVIEW */}
               {galleryForm.image && (
                 <div className="overflow-hidden rounded-xl border border-slate-200">
                   <div className="relative aspect-[16/9] w-full bg-slate-100">
@@ -973,7 +1137,7 @@ export default function Admin() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-3 pt-3">
+              <div className="flex flex-col-reverse justify-end gap-2 pt-2 sm:flex-row sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setIsGalleryModalOpen(false)}

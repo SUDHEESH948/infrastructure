@@ -1,6 +1,6 @@
 
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
@@ -12,75 +12,38 @@ import AboutUs from "./pages/AboutUs";
 import Services from "./pages/Services";
 import Admin from "./pages/Admin";
 
+function AppContent() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      {/* Hide public navigation and footer on Admin routes */}
+      {!isAdmin && <Navigation />}
+
+      {/* PAGE CONTENT */}
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/projects" element={<OurProjects />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </main>
+
+      {/* Hide public footer on Admin routes */}
+      {!isAdmin && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen flex-col bg-white">
-
-        {/* =================================================
-            PERSISTENT NAVIGATION
-        ================================================= */}
-        <Navigation />
-
-        {/* =================================================
-            PAGE CONTENT
-        ================================================= */}
-        <main className="flex-grow">
-
-          <Routes>
-
-            {/* HOME */}
-            <Route
-              path="/"
-              element={<Home />}
-            />
-
-            {/* SERVICES */}
-            <Route
-              path="/services"
-              element={<Services />}
-            />
-
-            {/* PROJECTS */}
-            <Route
-              path="/projects"
-              element={<OurProjects />}
-            />
-
-            {/* ABOUT */}
-            <Route
-              path="/about"
-              element={<AboutUs />}
-            />
-
-            {/* CONTACT */}
-            <Route
-              path="/contact"
-              element={<Contact />}
-            />
-
-            {/* ADMIN */}
-            <Route
-              path="/admin"
-              element={<Admin />}
-            />
-
-            {/* FALLBACK */}
-            <Route
-              path="*"
-              element={<Home />}
-            />
-
-          </Routes>
-
-        </main>
-
-        {/* =================================================
-            PERSISTENT FOOTER
-        ================================================= */}
-        <Footer />
-
-      </div>
+      <AppContent />
     </BrowserRouter>
   );
 }

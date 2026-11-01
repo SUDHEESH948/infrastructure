@@ -11,3 +11,4 @@ router.route("/").get(getGalleryItems).post(createGalleryItem);
 router.route("/:id").delete(deleteGalleryItem);
 
 export default router;
+
