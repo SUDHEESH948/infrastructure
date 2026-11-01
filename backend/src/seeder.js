@@ -5,8 +5,10 @@ import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
 import Project from "./models/Project.js";
 import Service from "./models/Service.js";
+import Gallery from "./models/Gallery.js";
 import { initialProjects } from "./data/projectsData.js";
 import { initialServices } from "./data/servicesData.js";
+import { initialGalleryItems } from "./data/galleryData.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,10 +25,13 @@ const importData = async () => {
     // Clear existing data
     await Project.deleteMany();
     await Service.deleteMany();
+    await Gallery.deleteMany();
+    await Gallery.deleteMany();
 
     // Insert seeds
     await Project.insertMany(initialProjects);
     await Service.insertMany(initialServices);
+    await Gallery.insertMany(initialGalleryItems);
 
     console.log("✅ Seed Data Imported Successfully!");
     process.exit();
@@ -46,6 +51,7 @@ const destroyData = async () => {
 
     await Project.deleteMany();
     await Service.deleteMany();
+    await Gallery.deleteMany();
 
     console.log("🗑️ Seed Data Destroyed Successfully!");
     process.exit();

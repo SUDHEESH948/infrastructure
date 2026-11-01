@@ -7,6 +7,8 @@ import morgan from "morgan";
 import { connectDB } from "./src/config/db.js";
 import projectRoutes from "./src/routes/projectRoutes.js";
 import serviceRoutes from "./src/routes/serviceRoutes.js";
+import galleryRoutes from "./src/routes/galleryRoutes.js";
+import authRoutes from "./src/routes/authRoutes.js";
 import { notFound, errorHandler } from "./src/middleware/errorMiddleware.js";
 
 // Load environment variables reliably from backend directory
@@ -65,6 +67,8 @@ app.get("/api/health", (req, res) => {
 // API Routes
 app.use("/api/projects", projectRoutes);
 app.use("/api/services", serviceRoutes);
+app.use("/api/gallery", galleryRoutes);
+app.use("/api/auth", authRoutes);
 
 // Root route
 app.get("/", (req, res) => {

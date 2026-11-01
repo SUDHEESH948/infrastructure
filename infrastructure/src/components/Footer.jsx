@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Phone, MapPin, ArrowUp } from "lucide-react";
 
 const Footer = () => {
@@ -76,6 +77,13 @@ const Footer = () => {
           <p className="text-[10px] uppercase tracking-widest text-white/50">
             © {new Date().getFullYear()} ONSET INFRA &bull; Engineers and Interior Designers. All rights reserved.
           </p>
+
+          <Link
+            to="/admin"
+            className="text-[11px] font-medium text-white/50 transition-colors hover:text-white"
+          >
+            Admin Portal
+          </Link>
         </div>
       </div>
     </footer>

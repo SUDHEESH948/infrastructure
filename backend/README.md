@@ -75,3 +75,4 @@ Server runs at `http://localhost:5000` with CORS configured for `http://localhos
 | PUT | `/api/projects/:id` | Update project |
 | DELETE | `/api/projects/:id` | Delete project |
 | GET | `/api/services` | Fetch all services |
+

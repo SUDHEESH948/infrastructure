@@ -2,22 +2,26 @@ import mongoose from "mongoose";
 import Project from "../models/Project.js";
 import { initialProjects } from "../data/projectsData.js";
 
+// In-memory store for fallback mode
+let inMemoryProjects = [...initialProjects];
+
 // @desc    Get all projects (with optional category filter)
 // @route   GET /api/projects
 // @access  Public
 export const getProjects = async (req, res) => {
   const { category } = req.query;
-  const filteredFallback = category && category !== "All"
-    ? initialProjects.filter((p) => p.category === category)
-    : initialProjects;
+  const filteredMemory =
+    category && category !== "All"
+      ? inMemoryProjects.filter((p) => p.category === category)
+      : inMemoryProjects;
 
   // If MongoDB is not connected, respond instantly with fallback data
   if (mongoose.connection.readyState !== 1) {
     return res.status(200).json({
       success: true,
-      count: filteredFallback.length,
+      count: filteredMemory.length,
       source: "fallback_offline",
-      data: filteredFallback,
+      data: filteredMemory,
     });
   }
 
@@ -25,13 +29,13 @@ export const getProjects = async (req, res) => {
     const filter = category && category !== "All" ? { category } : {};
     const projects = await Project.find(filter).sort({ projectId: 1, createdAt: -1 });
 
-    // Fallback to initial seeds if collection is currently empty
+    // Fallback to in-memory seeds if collection is currently empty
     if (!projects || projects.length === 0) {
       return res.status(200).json({
         success: true,
-        count: filteredFallback.length,
+        count: filteredMemory.length,
         source: "fallback_empty",
-        data: filteredFallback,
+        data: filteredMemory,
       });
     }
 
@@ -44,10 +48,10 @@ export const getProjects = async (req, res) => {
   } catch (error) {
     res.status(200).json({
       success: true,
-      count: filteredFallback.length,
+      count: filteredMemory.length,
       source: "fallback_on_error",
       warning: error.message,
-      data: filteredFallback,
+      data: filteredMemory,
     });
   }
 };
@@ -59,21 +63,24 @@ export const getProjectById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    let project = await Project.findOne({ projectId: id });
-    if (!project && id.match(/^[0-9a-fA-F]{24}$/)) {
-      project = await Project.findById(id);
-    }
-
-    if (!project) {
-      // Check fallback initial projects
-      const fallback = initialProjects.find((p) => p.projectId === id);
-      if (fallback) {
-        return res.status(200).json({ success: true, data: fallback });
+    if (mongoose.connection.readyState === 1) {
+      let project = await Project.findOne({ projectId: id });
+      if (!project && id.match(/^[0-9a-fA-F]{24}$/)) {
+        project = await Project.findById(id);
       }
-      return res.status(404).json({ success: false, message: "Project not found" });
+      if (project) {
+        return res.status(200).json({ success: true, data: project });
+      }
     }
 
-    res.status(200).json({ success: true, data: project });
+    const fallback = inMemoryProjects.find(
+      (p) => p.projectId === id || p._id === id
+    );
+    if (fallback) {
+      return res.status(200).json({ success: true, data: fallback });
+    }
+
+    return res.status(404).json({ success: false, message: "Project not found" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -81,11 +88,10 @@ export const getProjectById = async (req, res) => {
 
 // @desc    Create a new project
 // @route   POST /api/projects
-// @access  Public (or protected when auth is added)
+// @access  Admin
 export const createProject = async (req, res) => {
   try {
     const {
-      projectId,
       title,
       category,
       description,
@@ -98,29 +104,59 @@ export const createProject = async (req, res) => {
       status,
     } = req.body;
 
-    const existing = await Project.findOne({ projectId });
-    if (existing) {
+    if (!title || !description) {
       return res.status(400).json({
         success: false,
-        message: `Project with ID ${projectId} already exists`,
+        message: "Title and description are required",
       });
     }
 
-    const project = await Project.create({
+    // Auto-generate next project ID if not provided
+    const projectId =
+      req.body.projectId ||
+      String(inMemoryProjects.length + 1).padStart(2, "0");
+
+    const newProjectData = {
       projectId,
       title,
-      category,
+      category: category || "Infrastructure",
       description,
-      details,
-      location,
-      image,
-      iconName,
-      deliverables,
-      featured,
-      status,
-    });
+      details: details || "",
+      location: location || "Kerala",
+      image: image || "/projects/building-construction.jpg",
+      iconName: iconName || "Building2",
+      deliverables: Array.isArray(deliverables)
+        ? deliverables
+        : typeof deliverables === "string"
+        ? deliverables.split("\n").filter(Boolean)
+        : [],
+      featured: Boolean(featured),
+      status: status || "Completed",
+      createdAt: new Date().toISOString(),
+    };
 
-    res.status(201).json({ success: true, data: project });
+    if (mongoose.connection.readyState === 1) {
+      const existing = await Project.findOne({ projectId });
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: `Project with ID ${projectId} already exists`,
+        });
+      }
+
+      const project = await Project.create(newProjectData);
+      inMemoryProjects.unshift(project.toObject());
+      return res.status(201).json({ success: true, source: "database", data: project });
+    }
+
+    // In-memory fallback
+    inMemoryProjects.unshift(newProjectData);
+    res.status(201).json({
+      success: true,
+      source: "in_memory",
+      message: "Project added to in-memory store (connect MongoDB Atlas for persistent storage)",
+      data: newProjectData,
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -128,22 +164,46 @@ export const createProject = async (req, res) => {
 
 // @desc    Update project
 // @route   PUT /api/projects/:id
-// @access  Public
+// @access  Admin
 export const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    let project = await Project.findOneAndUpdate(
-      { $or: [{ projectId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
-      req.body,
-      { new: true, runValidators: true }
-    );
+    if (mongoose.connection.readyState === 1) {
+      let project = await Project.findOneAndUpdate(
+        { $or: [{ projectId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
+        req.body,
+        { new: true, runValidators: true }
+      );
 
-    if (!project) {
+      if (project) {
+        const index = inMemoryProjects.findIndex((p) => p.projectId === id || p._id === id);
+        if (index !== -1) inMemoryProjects[index] = project.toObject();
+        return res.status(200).json({ success: true, source: "database", data: project });
+      }
+    }
+
+    // In-memory fallback
+    const index = inMemoryProjects.findIndex((p) => p.projectId === id || p._id === id);
+    if (index === -1) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    res.status(200).json({ success: true, data: project });
+    inMemoryProjects[index] = {
+      ...inMemoryProjects[index],
+      ...req.body,
+      deliverables: Array.isArray(req.body.deliverables)
+        ? req.body.deliverables
+        : typeof req.body.deliverables === "string"
+        ? req.body.deliverables.split("\n").filter(Boolean)
+        : inMemoryProjects[index].deliverables,
+    };
+
+    res.status(200).json({
+      success: true,
+      source: "in_memory",
+      data: inMemoryProjects[index],
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -151,20 +211,35 @@ export const updateProject = async (req, res) => {
 
 // @desc    Delete project
 // @route   DELETE /api/projects/:id
-// @access  Public
+// @access  Admin
 export const deleteProject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const project = await Project.findOneAndDelete({
-      $or: [{ projectId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
-    });
+    if (mongoose.connection.readyState === 1) {
+      const project = await Project.findOneAndDelete({
+        $or: [{ projectId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+      });
+      inMemoryProjects = inMemoryProjects.filter(
+        (p) => p.projectId !== id && p._id?.toString() !== id
+      );
+      if (!project) {
+        return res.status(404).json({ success: false, message: "Project not found" });
+      }
+      return res.status(200).json({ success: true, message: "Project deleted successfully" });
+    }
 
-    if (!project) {
+    // In-memory fallback
+    const initLen = inMemoryProjects.length;
+    inMemoryProjects = inMemoryProjects.filter((p) => p.projectId !== id && p._id !== id);
+    if (inMemoryProjects.length === initLen) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    res.status(200).json({ success: true, message: "Project deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Project deleted from in-memory store",
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

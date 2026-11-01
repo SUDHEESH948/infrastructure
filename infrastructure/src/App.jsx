@@ -10,6 +10,7 @@ import Contact from "./pages/Contact";
 import OurProjects from "./pages/OurProjects";
 import AboutUs from "./pages/AboutUs";
 import Services from "./pages/Services";
+import Admin from "./pages/Admin";
 
 function App() {
   return (
@@ -56,6 +57,12 @@ function App() {
             <Route
               path="/contact"
               element={<Contact />}
+            />
+
+            {/* ADMIN */}
+            <Route
+              path="/admin"
+              element={<Admin />}
             />
 
             {/* FALLBACK */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowUpRight } from "lucide-react";
+import { fetchGalleryFromAPI } from "../services/api";
 
 /* =========================================================
    GALLERY ITEMS (Different High-Res Project Images)
@@ -77,6 +78,28 @@ const categories = [
 const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [items, setItems] = useState(galleryItems);
+
+  // Fetch live gallery from backend API
+  useEffect(() => {
+    let isMounted = true;
+    const loadGallery = async () => {
+      const liveItems = await fetchGalleryFromAPI();
+      if (isMounted && liveItems && liveItems.length > 0) {
+        const formatted = liveItems.map((item, idx) => ({
+          id: item.galleryId || item.id || String(idx + 1).padStart(2, "0"),
+          category: item.category,
+          title: item.title,
+          image: item.image,
+        }));
+        setItems(formatted);
+      }
+    };
+    loadGallery();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Lock background scroll on open
   useEffect(() => {
@@ -101,8 +124,8 @@ const Gallery = () => {
 
   const filteredItems =
     activeCategory === "All"
-      ? galleryItems
-      : galleryItems.filter((item) => item.category === activeCategory);
+      ? items
+      : items.filter((item) => item.category === activeCategory);
 
   return (
     <main className="min-h-screen bg-white text-[#17221D]">

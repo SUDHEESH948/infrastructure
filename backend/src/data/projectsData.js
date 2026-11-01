@@ -114,3 +114,4 @@ export const initialProjects = [
     featured: false,
   },
 ];
+
