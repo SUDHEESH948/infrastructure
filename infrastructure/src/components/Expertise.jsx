@@ -1,119 +1,22 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import {
-  Ruler,
-  FileCheck2,
-  Building2,
-  ClipboardCheck,
-  Landmark,
-  Map,
-  CarFront,
-  Calculator,
-  ArrowUpRight,
-} from "lucide-react";
-
-// Images
-import roadImage from "../assets/hero.png";
-import surveyImage from "../assets/hero.png";
-import buildingImage from "../assets/hero.png";
-import permitImage from "../assets/hero.png";
-import projectImage from "../assets/hero.png";
-import landImage from "../assets/hero.png";
-import highwayImage from "../assets/hero.png";
-import valuationImage from "../assets/hero.png";
-import nocasImage from "../assets/hero.png";
-
-/* =========================================================
-   SERVICES DATA
-========================================================= */
-
-const services = [
-  {
-    number: "01",
-    title: "Surveyor",
-    description:
-      "Accurate site measurements, land assessment, and professional surveying for development planning.",
-    icon: Ruler,
-    image: surveyImage,
-  },
-  {
-    number: "02",
-    title: "NOCAS",
-    description:
-      "Professional assistance with NOCAS documentation, approvals, and development requirements.",
-    icon: FileCheck2,
-    image: nocasImage,
-  },
-  {
-    number: "03",
-    title: "NHA",
-    description:
-      "Consultancy and coordination for highway requirements, permissions, and project approvals.",
-    icon: Landmark,
-    image: highwayImage,
-  },
-  {
-    number: "04",
-    title: "Road & Building Contractor",
-    description:
-      "Complete construction solutions for roads, buildings, civil works, and infrastructure.",
-    icon: Building2,
-    image: buildingImage,
-  },
-  {
-    number: "05",
-    title: "Project Management",
-    description:
-      "End-to-end planning, coordination, execution, quality control, and project delivery.",
-    icon: ClipboardCheck,
-    image: projectImage,
-  },
-  {
-    number: "06",
-    title: "Local Body Permits",
-    description:
-      "Assistance with building permits, approvals, documentation, and authority coordination.",
-    icon: FileCheck2,
-    image: permitImage,
-  },
-  {
-    number: "07",
-    title: "Land Surveying",
-    description:
-      "Detailed land surveys providing reliable site data for construction and development.",
-    icon: Map,
-    image: landImage,
-  },
-  {
-    number: "08",
-    title: "NHAI Access Permit",
-    description:
-      "Professional assistance with access permits for developments connected to national highways.",
-    icon: CarFront,
-    image: roadImage,
-  },
-  {
-    number: "09",
-    title: "Estimation & Valuation",
-    description:
-      "Building cost estimation and property valuation for residential and commercial projects.",
-    icon: Calculator,
-    image: valuationImage,
-  },
-];
+import { ArrowUpRight } from "lucide-react";
+import { services } from "../data/servicesData";
+import ServiceModal from "./ServiceModal";
 
 /* =========================================================
    SERVICE CARD
 ========================================================= */
 
-const ServiceCard = ({ service }) => {
+const ServiceCard = ({ service, onSelectService }) => {
   const Icon = service.icon;
 
   return (
     <motion.article
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="group w-full min-w-0"
+      onClick={() => onSelectService(service)}
+      className="group w-full min-w-0 cursor-pointer"
     >
       <div
         className="
@@ -251,7 +154,7 @@ const ServiceCard = ({ service }) => {
             {service.title}
           </h3>
 
-          <p className="mt-2.5 min-h-[48px] text-xs leading-5 text-slate-500 sm:text-sm">
+          <p className="mt-2.5 min-h-[48px] text-xs leading-5 text-slate-500 sm:text-sm line-clamp-3">
             {service.description}
           </p>
 
@@ -271,10 +174,17 @@ const ServiceCard = ({ service }) => {
               ONSET INFRA
             </span>
 
-            <span className="flex items-center gap-1 text-xs font-semibold text-[#0066B4]">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectService(service);
+              }}
+              className="flex items-center gap-1 text-xs font-semibold text-[#0066B4] transition-colors hover:text-[#004f8c]"
+            >
               Explore
               <ArrowUpRight size={13} />
-            </span>
+            </button>
           </div>
         </div>
 
@@ -303,7 +213,7 @@ const ServiceCard = ({ service }) => {
    ANIMATED ROW COMPONENT
 ========================================================= */
 
-const AnimatedRow = ({ row, rowIndex, totalRows, scrollYProgress }) => {
+const AnimatedRow = ({ row, rowIndex, totalRows, scrollYProgress, onSelectService }) => {
   const progressStart = totalRows <= 1 ? 0 : (rowIndex - 0.75) / (totalRows - 1);
   const progressEnd = totalRows <= 1 ? 1 : rowIndex / (totalRows - 1);
 
@@ -325,7 +235,11 @@ const AnimatedRow = ({ row, rowIndex, totalRows, scrollYProgress }) => {
       `}
     >
       {row.map((service) => (
-        <ServiceCard key={service.number} service={service} />
+        <ServiceCard
+          key={service.number}
+          service={service}
+          onSelectService={onSelectService}
+        />
       ))}
     </motion.div>
   );
@@ -350,6 +264,7 @@ const createRows = (items, columns) => {
 export default function Expertise() {
   const sectionRef = useRef(null);
   const [columns, setColumns] = useState(3);
+  const [selectedService, setSelectedService] = useState(null);
 
   useEffect(() => {
     const updateColumns = () => {
@@ -394,17 +309,16 @@ export default function Expertise() {
           <div className="mb-3 flex items-center gap-3">
             <span className="h-px w-8 bg-[#0066B4]" />
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
-              Our Expertise
+              Onset Infra &bull; Engineers and Interior Designers
             </span>
           </div>
 
           <h2 className="font-serif text-4xl font-light leading-tight tracking-tight text-[#17221D] sm:text-5xl md:text-6xl">
-            Engineering <span className="text-[#0066B4]">with precision.</span>
+            Engineers &amp; <span className="text-[#0066B4]">Interior Designers.</span>
           </h2>
 
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-500 md:text-base">
-            Integrated engineering, surveying, construction, permits, and
-            consultancy solutions for infrastructure and development.
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-500 md:text-base">
+            Integrated building and road contracting, bespoke interior design, modular kitchens, statutory permits, Airport NOC, GPS surveying, renovation, and 3D visualization.
           </p>
         </motion.div>
 
@@ -417,10 +331,17 @@ export default function Expertise() {
               rowIndex={rowIndex}
               totalRows={rows.length}
               scrollYProgress={scrollYProgress}
+              onSelectService={setSelectedService}
             />
           ))}
         </div>
       </div>
+
+      {/* SERVICE DETAILS MODAL */}
+      <ServiceModal
+        selectedService={selectedService}
+        onClose={() => setSelectedService(null)}
+      />
     </div>
   );
 }

@@ -7,10 +7,10 @@ import interiorVideo from "../assets/introe.mp4";
 const slides = [
   {
     video: interiorVideo,
-    eyebrow: "INTERIOR DESIGN • ARCHITECTURE",
+    eyebrow: "ONSET INFRA • ENGINEERS AND INTERIOR DESIGNERS",
     quote: "Designing spaces that inspire everyday living.",
     description:
-      "Thoughtfully crafted interiors that blend modern aesthetics, functionality, and comfort to create beautiful spaces.",
+      "Engineers and Interior Designers delivering turnkey building and road contracting, bespoke interior design, modular kitchens, statutory permits, and 3D visualization.",
   },
 ];
 

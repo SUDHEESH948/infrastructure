@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowUpRight } from "lucide-react";
 
@@ -76,6 +77,27 @@ const categories = [
 const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedImage, setSelectedImage] = useState(null);
+
+  // Lock background scroll on open
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedImage(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [selectedImage]);
 
   const filteredItems =
     activeCategory === "All"
@@ -250,97 +272,101 @@ const Gallery = () => {
       {/* =====================================================
           LIGHTBOX MODAL
       ===================================================== */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedImage(null)}
-            className="
-              fixed
-              inset-0
-              z-[100]
-              flex
-              items-center
-              justify-center
-              bg-[#17221D]/85
-              p-4
-              backdrop-blur-md
-              md:p-8
-            "
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              onClick={(e) => e.stopPropagation()}
-              className="
-                relative
-                flex
-                max-h-[92vh]
-                w-full
-                max-w-5xl
-                flex-col
-                overflow-hidden
-                rounded-[24px]
-                bg-white
-                shadow-2xl
-              "
-            >
-              <button
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {selectedImage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 onClick={() => setSelectedImage(null)}
-                aria-label="Close modal"
                 className="
-                  absolute
-                  right-4
-                  top-4
-                  z-20
+                  fixed
+                  inset-0
+                  z-[999999]
                   flex
-                  h-10
-                  w-10
                   items-center
                   justify-center
-                  rounded-full
-                  bg-white/90
-                  text-[#0066B4]
-                  shadow-lg
+                  bg-black/80
+                  p-4
                   backdrop-blur-md
-                  transition-all
-                  duration-200
-                  hover:bg-[#0066B4]
-                  hover:text-white
+                  md:p-8
                 "
               >
-                <X size={18} />
-              </button>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="
+                    relative
+                    flex
+                    max-h-[92vh]
+                    w-full
+                    max-w-5xl
+                    flex-col
+                    overflow-hidden
+                    rounded-[24px]
+                    bg-white
+                    shadow-2xl
+                  "
+                >
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    aria-label="Close modal"
+                    className="
+                      absolute
+                      right-4
+                      top-4
+                      z-20
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-full
+                      bg-white/90
+                      text-[#0066B4]
+                      shadow-lg
+                      backdrop-blur-md
+                      transition-all
+                      duration-200
+                      hover:bg-[#0066B4]
+                      hover:text-white
+                    "
+                  >
+                    <X size={18} />
+                  </button>
 
-              <div className="flex max-h-[72vh] w-full items-center justify-center overflow-hidden bg-[#0c1a24]">
-                <img
-                  src={selectedImage.image}
-                  alt={selectedImage.title}
-                  className="max-h-[72vh] w-full object-contain"
-                />
-              </div>
+                  <div className="flex max-h-[72vh] w-full items-center justify-center overflow-hidden bg-[#0c1a24]">
+                    <img
+                      src={selectedImage.image}
+                      alt={selectedImage.title}
+                      className="max-h-[72vh] w-full object-contain"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between gap-4 p-5 md:px-7 md:py-5">
-                <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
-                    {selectedImage.category}
-                  </span>
-                  <h3 className="mt-0.5 font-serif text-xl font-light text-[#17221D] md:text-2xl">
-                    {selectedImage.title}
-                  </h3>
-                </div>
+                  <div className="flex items-center justify-between gap-4 p-5 md:px-7 md:py-5">
+                    <div>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#0066B4]">
+                        {selectedImage.category}
+                      </span>
+                      <h3 className="mt-0.5 font-serif text-xl font-light text-[#17221D] md:text-2xl">
+                        {selectedImage.title}
+                      </h3>
+                    </div>
 
-                <span className="font-mono text-xs font-semibold text-slate-400">
-                  {selectedImage.id}
-                </span>
-              </div>
-            </motion.div>
-          </motion.div>
+                    <span className="font-mono text-xs font-semibold text-slate-400">
+                      {selectedImage.id}
+                    </span>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </main>
   );
 };

@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowUpRight,
@@ -10,7 +11,12 @@ import {
   X,
 } from "lucide-react";
 
-import roadImage from "../assets/hero.png";
+import roadProjectImg from "../assets/projects/road-development.jpg";
+import buildingProjectImg from "../assets/projects/building-construction.jpg";
+import surveyProjectImg from "../assets/projects/land-site-survey.jpg";
+import managementProjectImg from "../assets/projects/project-management.jpg";
+import nhaiProjectImg from "../assets/projects/nhai-access.jpg";
+import valuationProjectImg from "../assets/projects/estimation-valuation.jpg";
 
 const projects = [
   {
@@ -21,7 +27,7 @@ const projects = [
       "Infrastructure planning, road development, access coordination, and construction solutions for transportation projects.",
     location: "Kerala",
     icon: Route,
-    image: roadImage,
+    image: roadProjectImg,
   },
   {
     id: "02",
@@ -31,7 +37,7 @@ const projects = [
       "Professional construction solutions covering planning, civil works, coordination, and project execution.",
     location: "Kannur",
     icon: Building2,
-    image: roadImage,
+    image: buildingProjectImg,
   },
   {
     id: "03",
@@ -41,7 +47,7 @@ const projects = [
       "Accurate surveying and site assessment supporting development, planning, construction, and property requirements.",
     location: "Kerala",
     icon: Map,
-    image: roadImage,
+    image: surveyProjectImg,
   },
   {
     id: "04",
@@ -51,7 +57,7 @@ const projects = [
       "End-to-end coordination, planning, monitoring, quality control, and delivery for infrastructure projects.",
     location: "Kannur",
     icon: HardHat,
-    image: roadImage,
+    image: managementProjectImg,
   },
   {
     id: "05",
@@ -61,7 +67,7 @@ const projects = [
       "Professional assistance for developments requiring highway access coordination, documentation, and approvals.",
     location: "Kerala",
     icon: Route,
-    image: roadImage,
+    image: nhaiProjectImg,
   },
   {
     id: "06",
@@ -71,7 +77,7 @@ const projects = [
       "Construction estimation and property valuation support for residential, commercial, and development projects.",
     location: "Kerala",
     icon: Building2,
-    image: roadImage,
+    image: valuationProjectImg,
   },
 ];
 
@@ -87,6 +93,27 @@ const categories = [
 const OurProjects = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedProject, setSelectedProject] = useState(null);
+
+  // Lock background scroll on open
+  useEffect(() => {
+    if (!selectedProject) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSelectedProject(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [selectedProject]);
 
   const filteredProjects =
     activeCategory === "All"
@@ -385,15 +412,17 @@ const OurProjects = () => {
           PROJECT DETAILS MODAL
       ===================================================== */}
 
-      <AnimatePresence>
-        {selectedProject && (
-          <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#17221D]/70 px-3 py-6 backdrop-blur-md xs:px-5 xs:py-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedProject(null)}
-          >
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {selectedProject && (
+              <motion.div
+                className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/75 px-3 py-6 backdrop-blur-md xs:px-5 xs:py-8 overflow-y-auto overscroll-contain"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedProject(null)}
+              >
             <motion.div
               initial={{
                 opacity: 0,
@@ -500,7 +529,9 @@ const OurProjects = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
     </main>
   );

@@ -396,6 +396,8 @@ const Contact = () => {
                     <option>Project Management</option>
                     <option>Local Body Permits</option>
                     <option>NHA / NHAI Services</option>
+                    <option>Airport NOC</option>
+                    <option>GPS Surveying</option>
                     <option>Estimation & Valuation</option>
                     <option>Other</option>
                   </select>

@@ -24,13 +24,13 @@ const Footer = () => {
                 <h2 className="text-lg font-semibold tracking-wider">
                   ONSET INFRA
                 </h2>
-                <p className="text-[10px] uppercase tracking-widest text-white/60">
-                  Engineering & Infrastructure
+                <p className="text-[10px] uppercase tracking-widest text-white/70">
+                  Engineers and Interior Designers
                 </p>
               </div>
             </div>
-            <p className="mt-3 max-w-sm text-xs leading-5 text-white/70">
-              Surveying, construction, and engineering consultancy solutions.
+            <p className="mt-3 max-w-sm text-xs leading-5 text-white/80">
+              Building &amp; road contractors, interior designers, modular kitchens, statutory permits, Airport NOC, GPS surveying, renovation, and 3D visualization.
             </p>
           </div>
 
@@ -74,10 +74,8 @@ const Footer = () => {
         {/* BOTTOM STRIP */}
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-5 text-xs sm:flex-row">
           <p className="text-[10px] uppercase tracking-widest text-white/50">
-            © {new Date().getFullYear()} ONSET INFRA. All rights reserved.
+            © {new Date().getFullYear()} ONSET INFRA &bull; Engineers and Interior Designers. All rights reserved.
           </p>
-
-          
         </div>
       </div>
     </footer>
