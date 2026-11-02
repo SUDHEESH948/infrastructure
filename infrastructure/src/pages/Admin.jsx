@@ -76,6 +76,23 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
+
+  // Custom Confirm Dialog State (Replaces native browser window.confirm)
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "Delete",
+    isDanger: true,
+    onConfirm: null,
+  });
+
   // Project Modal State (Add or Edit)
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
@@ -400,20 +417,27 @@ export default function Admin() {
     }
   };
 
-  // Delete Project
-  const handleDeleteProject = async (proj) => {
-    const idToDelete = proj.projectId || proj.id || proj._id;
-    if (!window.confirm(`Are you sure you want to delete project: "${proj.title}"?`)) {
-      return;
-    }
-
-    try {
-      await deleteProjectAPI(idToDelete);
-      showNotification(`Project "${proj.title}" removed!`);
-      loadAllData();
-    } catch (err) {
-      showNotification(err.message || "Failed to delete project", "error");
-    }
+  // Delete Project with Custom Confirmation Dialog
+  const handleDeleteProject = (proj) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Project",
+      message: `Are you sure you want to delete "${proj.title}"? This will permanently remove the project and its stored image file from the server.`,
+      confirmText: "Delete Project",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const idToDelete = proj.projectId || proj.id || proj._id;
+          await deleteProjectAPI(idToDelete);
+          showNotification(`Project "${proj.title}" removed successfully!`);
+          loadAllData();
+        } catch (err) {
+          showNotification(err.message || "Failed to delete project", "error");
+        } finally {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
   };
 
   // Save Gallery Image
@@ -435,20 +459,27 @@ export default function Admin() {
     }
   };
 
-  // Delete Gallery Image
-  const handleDeleteGallery = async (item) => {
-    const idToDelete = item.galleryId || item.id || item._id;
-    if (!window.confirm(`Delete gallery image "${item.title}"?`)) {
-      return;
-    }
-
-    try {
-      await deleteGalleryItemAPI(idToDelete);
-      showNotification(`Gallery image "${item.title}" removed!`);
-      loadAllData();
-    } catch (err) {
-      showNotification(err.message || "Failed to delete gallery item", "error");
-    }
+  // Delete Gallery Image with Custom Confirmation Dialog
+  const handleDeleteGallery = (item) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete Gallery Image",
+      message: `Are you sure you want to delete "${item.title}"? This will permanently remove the photo and its image file from uploads.`,
+      confirmText: "Delete Image",
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const idToDelete = item.galleryId || item.id || item._id;
+          await deleteGalleryItemAPI(idToDelete);
+          showNotification(`Gallery image "${item.title}" removed successfully!`);
+          loadAllData();
+        } catch (err) {
+          showNotification(err.message || "Failed to delete gallery item", "error");
+        } finally {
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
   };
 
   // Filtered Projects
@@ -600,20 +631,100 @@ export default function Admin() {
       <AnimatePresence>
         {notification && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed right-3 sm:right-6 top-4 z-[999999] flex items-center gap-2 rounded-2xl px-4 py-3 shadow-2xl text-xs font-medium text-white ${
-              notification.type === "error" ? "bg-red-600" : "bg-[#0066B4]"
+            initial={{ opacity: 0, y: -25, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -25, scale: 0.95 }}
+            className={`fixed right-3 sm:right-6 top-5 z-[999999] flex max-w-md items-center gap-3 rounded-2xl px-4 py-3 shadow-2xl text-xs sm:text-sm font-medium text-white backdrop-blur-md ${
+              notification.type === "error"
+                ? "bg-red-600/95 border border-red-500 shadow-red-600/30"
+                : notification.type === "warning"
+                ? "bg-amber-600/95 border border-amber-500 shadow-amber-600/30"
+                : "bg-[#0066B4]/95 border border-[#00528F] shadow-[#0066B4]/30"
             }`}
           >
             {notification.type === "error" ? (
-              <AlertCircle size={16} />
+              <AlertCircle size={18} className="shrink-0 text-red-200" />
+            ) : notification.type === "warning" ? (
+              <AlertCircle size={18} className="shrink-0 text-amber-200" />
             ) : (
-              <CheckCircle2 size={16} />
+              <CheckCircle2 size={18} className="shrink-0 text-emerald-300" />
             )}
-            <span>{notification.message}</span>
+            <span className="flex-1 leading-snug">{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="ml-2 rounded-lg p-1 text-white/70 hover:bg-white/10 hover:text-white transition"
+            >
+              <X size={14} />
+            </button>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CUSTOM CONFIRMATION MODAL (Replaces native browser window.confirm popup) */}
+      <AnimatePresence>
+        {confirmDialog.isOpen && (
+          <div className="fixed inset-0 z-[999998] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-6 shadow-2xl border border-slate-100"
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                    confirmDialog.isDanger
+                      ? "bg-red-50 text-red-600 ring-8 ring-red-50/50"
+                      : "bg-[#EDF5FA] text-[#0066B4] ring-8 ring-[#EDF5FA]/50"
+                  }`}
+                >
+                  <Trash2 size={22} />
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {confirmDialog.title}
+                  </h3>
+                  <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-500">
+                    {confirmDialog.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col-reverse justify-end gap-2.5 sm:flex-row sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirmDialog.onConfirm) {
+                      await confirmDialog.onConfirm();
+                    }
+                  }}
+                  className={`rounded-xl px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md transition ${
+                    confirmDialog.isDanger
+                      ? "bg-red-600 hover:bg-red-700 shadow-red-600/25"
+                      : "bg-[#0066B4] hover:bg-[#00528F] shadow-[#0066B4]/25"
+                  }`}
+                >
+                  {confirmDialog.confirmText || "Delete"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
