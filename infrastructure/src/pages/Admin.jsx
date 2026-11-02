@@ -53,29 +53,6 @@ const GALLERY_CATEGORIES = [
   "Project Management",
 ];
 
-const STOCK_GALLERY_PRESETS = [
-  {
-    title: "Highway Asphalt & Road Paving",
-    url: "https://images.unsplash.com/photo-1541888946425-d0fbb18f15f6?auto=format&fit=crop&w=1000&q=80",
-    category: "Infrastructure",
-  },
-  {
-    title: "Civil RCC Structural Engineering",
-    url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1000&q=80",
-    category: "Construction",
-  },
-  {
-    title: "DGPS Land Surveying & Topography",
-    url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1000&q=80",
-    category: "Surveying",
-  },
-  {
-    title: "Site Supervision & Coordination",
-    url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1000&q=80",
-    category: "Project Management",
-  },
-];
-
 export default function Admin() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -1165,49 +1142,24 @@ export default function Admin() {
                       </span>
                     )}
                   </div>
+
+                  {galleryForm.image && (
+                    <div className="flex items-center gap-3 pt-1">
+                      <img
+                        src={galleryForm.image}
+                        alt="Gallery preview"
+                        className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                      <span className="max-w-xs truncate text-[11px] text-slate-600">
+                        {galleryForm.image}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* QUICK STOCK PRESETS */}
-              <div>
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  Quick Image Presets
-                </span>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {STOCK_GALLERY_PRESETS.map((preset, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() =>
-                        setGalleryForm({
-                          title: preset.title,
-                          category: preset.category,
-                          image: preset.url,
-                        })
-                      }
-                      className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600 hover:border-[#0066B4] hover:text-[#0066B4]"
-                    >
-                      {preset.category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* LIVE PREVIEW */}
-              {galleryForm.image && (
-                <div className="overflow-hidden rounded-xl border border-slate-200">
-                  <div className="relative aspect-[16/9] w-full bg-slate-100">
-                    <img
-                      src={galleryForm.image}
-                      alt="Preview"
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
 
               <div className="flex flex-col-reverse justify-end gap-2 pt-2 sm:flex-row sm:gap-3">
                 <button
