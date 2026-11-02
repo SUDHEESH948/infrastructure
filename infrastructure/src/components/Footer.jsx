@@ -295,8 +295,8 @@ const Footer = () => {
         {/* ========================================================
             3. BOTTOM ROW: ONSET INFRA LETTER BY LETTER
         ======================================================== */}
-        <div className="relative z-10 w-full overflow-hidden pb-1 sm:pb-3 select-none pr-4 sm:pr-8">
-          <div className="flex w-full items-baseline justify-start gap-2.5 sm:gap-4 md:gap-6 font-sans font-black uppercase tracking-tighter text-white">
+        <div className="relative z-10 w-full overflow-hidden pb-1 sm:pb-3 select-none">
+          <div className="flex w-full items-baseline justify-start gap-2.5 sm:gap-4 md:gap-5 lg:gap-7 font-sans font-black uppercase tracking-tighter text-white">
             {/* WORD 1: ONSET */}
             <div className="flex">
               {wordOnset.map((char, i) => (
@@ -313,7 +313,7 @@ const Footer = () => {
                     delay: 0.15 + i * 0.07,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="inline-block transform-gpu text-[10vw] sm:text-[11vw] md:text-[11.8vw] lg:text-[12.2vw] leading-[0.82] drop-shadow-[0_16px_28px_rgba(0,0,0,0.55)]"
+                  className="inline-block transform-gpu text-[10vw] sm:text-[11vw] md:text-[12.2vw] lg:text-[13.4vw] xl:text-[13.7vw] leading-[0.82] drop-shadow-[0_16px_28px_rgba(0,0,0,0.55)]"
                 >
                   {char}
                 </motion.span>
@@ -336,7 +336,7 @@ const Footer = () => {
                     delay: 0.15 + (wordOnset.length + i) * 0.07,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="inline-block transform-gpu text-[10vw] sm:text-[11vw] md:text-[11.8vw] lg:text-[12.2vw] leading-[0.82] drop-shadow-[0_16px_28px_rgba(0,0,0,0.55)]"
+                  className="inline-block transform-gpu text-[10vw] sm:text-[11vw] md:text-[12.2vw] lg:text-[13.4vw] xl:text-[13.7vw] leading-[0.82] drop-shadow-[0_16px_28px_rgba(0,0,0,0.55)]"
                 >
                   {char}
                 </motion.span>
