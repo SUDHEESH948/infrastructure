@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 
 const newsItems = [
@@ -7,7 +6,6 @@ const newsItems = [
     tag: "Project",
     title:
       "Integrated Infrastructure Planning and Development Solutions",
-    date: "14 Sep 2026",
     image:
       "https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcSshg-9jcs6vACon3aS35RHsrZR-oIsYUwlAe8U29FT8_9Qow39WlzANrdQnDvrSJyZRVbL8eVvjCZrjIY",
     bgHeadline: "Infrastructure Development",
@@ -18,7 +16,6 @@ const newsItems = [
     tag: "Project",
     title:
       "Modern Engineering Solutions for Commercial and Residential Development",
-    date: "15 Sep 2026",
     image:
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
     bgHeadline: "Modern Development",
@@ -29,7 +26,6 @@ const newsItems = [
     tag: "Project",
     title:
       "Professional Planning, Surveying and Engineering Consultancy",
-    date: "12 Sep 2026",
     image:
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
     bgHeadline: "Engineering Excellence",
@@ -40,7 +36,6 @@ const newsItems = [
     tag: "Project",
     title:
       "Complete Road, Building and Infrastructure Project Management",
-    date: "17 Aug 2026",
     image:
       "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
     bgHeadline: "Project Management",
@@ -341,26 +336,6 @@ export default function Projects() {
             >
               {item.title}
             </h3>
-
-            {/* =================================================
-                DATE
-            ================================================= */}
-
-            <span
-              className="
-                mt-auto
-                pt-5
-                font-mono
-                text-[12px]
-                text-slate-400
-              "
-            >
-              {item.date}
-            </span>
-
-            {/* BOTTOM LINE */}
-
-            
           </article>
         ))}
       </div>
