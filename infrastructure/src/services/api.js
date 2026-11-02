@@ -23,6 +23,25 @@ export const uploadImageAPI = async (file, folder = "general") => {
   return response.json();
 };
 
+export const uploadMultipleImagesAPI = async (files, folder = "general") => {
+  const formData = new FormData();
+  Array.from(files).forEach((file) => {
+    formData.append("images", file);
+  });
+
+  const response = await fetch(`${API_BASE}/upload/multiple?folder=${encodeURIComponent(folder)}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || "Failed to upload image files");
+  }
+
+  return response.json();
+};
+
 /* =========================================================
    PROJECTS API
 ========================================================= */

@@ -55,11 +55,52 @@ export const getGalleryItems = async (req, res) => {
   }
 };
 
-// @desc    Create a new gallery item
+// @desc    Create a new gallery item or multiple gallery items
 // @route   POST /api/gallery
 // @access  Admin
 export const createGalleryItem = async (req, res) => {
   try {
+    // Check if multiple items are passed (batch upload)
+    const rawItems = Array.isArray(req.body)
+      ? req.body
+      : Array.isArray(req.body.items)
+      ? req.body.items
+      : null;
+
+    if (rawItems && rawItems.length > 0) {
+      const validItems = rawItems.filter((it) => it && it.image);
+      if (validItems.length === 0) {
+        return res.status(400).json({ success: false, message: "No valid image items provided" });
+      }
+
+      const timestamp = Date.now();
+      const formattedItems = validItems.map((it, idx) => ({
+        galleryId: it.galleryId || `gal_${timestamp}_${idx}`,
+        title: it.title || req.body.title || `Gallery Image ${idx + 1}`,
+        category: it.category || req.body.category || "Infrastructure",
+        image: it.image,
+      }));
+
+      if (mongoose.connection.readyState === 1) {
+        const created = await Gallery.insertMany(formattedItems);
+        formattedItems.forEach((it) => inMemoryGallery.unshift(it));
+        return res.status(201).json({
+          success: true,
+          count: created.length,
+          source: "database",
+          data: created,
+        });
+      }
+
+      formattedItems.forEach((it) => inMemoryGallery.unshift(it));
+      return res.status(201).json({
+        success: true,
+        count: formattedItems.length,
+        source: "in_memory",
+        data: formattedItems,
+      });
+    }
+
     const { title, category, image } = req.body;
 
     if (!title || !image) {

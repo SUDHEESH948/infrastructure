@@ -86,6 +86,43 @@ router.post("/", upload.single("image"), (req, res) => {
   });
 });
 
+// @desc    Upload multiple images (up to 30 files)
+// @route   POST /api/upload/multiple
+// @access  Admin
+router.post("/multiple", upload.array("images", 30), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Please attach at least one image file to upload",
+    });
+  }
+
+  const subfolder =
+    req.query.folder === "projects"
+      ? "projects/"
+      : req.query.folder === "gallery"
+      ? "gallery/"
+      : "";
+
+  const files = req.files.map((file) => {
+    const relativePath = `/uploads/${subfolder}${file.filename}`;
+    return {
+      filename: file.filename,
+      filePath: relativePath,
+      url: relativePath,
+      size: file.size,
+      originalName: file.originalname,
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    message: `${files.length} images uploaded and stored successfully`,
+    count: files.length,
+    files,
+  });
+});
+
 // @desc    Delete uploaded image file from disk
 // @route   DELETE /api/upload
 // @access  Admin

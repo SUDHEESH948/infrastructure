@@ -35,6 +35,7 @@ import {
   deleteGalleryItemAPI,
   loginAdminAPI,
   uploadImageAPI,
+  uploadMultipleImagesAPI,
 } from "../services/api";
 
 const PROJECT_CATEGORIES = [
@@ -116,6 +117,7 @@ export default function Admin() {
     category: "Infrastructure",
     image: "",
   });
+  const [galleryUploadedImages, setGalleryUploadedImages] = useState([]);
 
   // Default Category Definitions
   const DEFAULT_GALLERY_CATS = [
@@ -363,24 +365,51 @@ export default function Admin() {
   };
 
   const handleGalleryImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setGalleryUploading(true);
     try {
-      const res = await uploadImageAPI(file, "gallery");
-      if (res?.url) {
-        setGalleryForm((prev) => ({
-          ...prev,
-          image: res.url,
-          title: prev.title || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
-        }));
-        showNotification("Gallery image stored in folder: " + res.url);
+      if (files.length === 1) {
+        const res = await uploadImageAPI(files[0], "gallery");
+        if (res?.url) {
+          const defaultTitle = files[0].name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+          const newImg = { url: res.url, filename: res.filename, title: defaultTitle };
+          setGalleryUploadedImages((prev) => [...prev, newImg]);
+          setGalleryForm((prev) => ({
+            ...prev,
+            image: res.url,
+            title: prev.title || defaultTitle,
+          }));
+          showNotification("Gallery image uploaded!");
+        }
+      } else {
+        const res = await uploadMultipleImagesAPI(files, "gallery");
+        if (res?.files && res.files.length > 0) {
+          const formatted = res.files.map((f) => {
+            const cleanTitle = (f.originalName || f.filename)
+              .replace(/\.[^/.]+$/, "")
+              .replace(/[-_]/g, " ");
+            return {
+              url: f.url || f.filePath,
+              filename: f.filename,
+              title: cleanTitle,
+            };
+          });
+          setGalleryUploadedImages((prev) => [...prev, ...formatted]);
+          setGalleryForm((prev) => ({
+            ...prev,
+            image: formatted[0].url,
+            title: prev.title || `Gallery Upload (${formatted.length} Photos)`,
+          }));
+          showNotification(`${formatted.length} gallery images uploaded!`);
+        }
       }
     } catch (err) {
-      showNotification(err.message || "Failed to upload image", "error");
+      showNotification(err.message || "Failed to upload image(s)", "error");
     } finally {
       setGalleryUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -568,22 +597,49 @@ export default function Admin() {
     });
   };
 
-  // Save Gallery Image
+  // Save Gallery Image (Supports single or batch multiple images)
   const handleSaveGallery = async (e) => {
     e.preventDefault();
-    if (!galleryForm.title.trim() || !galleryForm.image.trim()) {
-      showNotification("Title and image URL are required", "error");
+
+    if (galleryUploadedImages.length === 0 && !galleryForm.image.trim()) {
+      showNotification("Please upload at least one image", "error");
       return;
     }
 
     try {
-      await createGalleryItemAPI(galleryForm);
-      showNotification(`Gallery image "${galleryForm.title}" added successfully!`);
+      if (galleryUploadedImages.length > 1) {
+        const itemsToCreate = galleryUploadedImages.map((img, idx) => ({
+          title:
+            galleryForm.title.trim() && galleryUploadedImages.length > 1
+              ? `${galleryForm.title.trim()} (${idx + 1})`
+              : img.title || `Gallery Image ${idx + 1}`,
+          category: galleryForm.category || "Infrastructure",
+          image: img.url,
+        }));
+
+        await createGalleryItemAPI({ items: itemsToCreate });
+        showNotification(`${itemsToCreate.length} gallery images added successfully!`);
+      } else {
+        const imageToSave = galleryUploadedImages[0]?.url || galleryForm.image;
+        if (!galleryForm.title.trim() || !imageToSave) {
+          showNotification("Title and image are required", "error");
+          return;
+        }
+
+        await createGalleryItemAPI({
+          title: galleryForm.title.trim(),
+          category: galleryForm.category || "Infrastructure",
+          image: imageToSave,
+        });
+        showNotification(`Gallery image "${galleryForm.title}" added successfully!`);
+      }
+
       setIsGalleryModalOpen(false);
       setGalleryForm({ title: "", category: "Infrastructure", image: "" });
+      setGalleryUploadedImages([]);
       loadAllData();
     } catch (err) {
-      showNotification(err.message || "Failed to add gallery item", "error");
+      showNotification(err.message || "Failed to add gallery image(s)", "error");
     }
   };
 
@@ -923,7 +979,11 @@ export default function Admin() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setIsGalleryModalOpen(true)}
+                  onClick={() => {
+                    setIsGalleryModalOpen(true);
+                    setGalleryUploadedImages([]);
+                    setGalleryForm({ title: "", category: "Infrastructure", image: "" });
+                  }}
                   className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0066B4] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/20 transition hover:bg-[#00528F] sm:w-auto"
                 >
                   <Plus size={16} />
@@ -1630,17 +1690,27 @@ export default function Admin() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Gallery Image *
-                </label>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Gallery Images *
+                  </label>
+                  <span className="text-[11px] text-slate-400">
+                    Select single or multiple photos
+                  </span>
+                </div>
 
-                <div className="mt-1 flex flex-col gap-2 rounded-2xl border border-dashed border-[#0066B4]/30 bg-[#EDF5FA]/60 p-3.5 transition hover:border-[#0066B4]">
+                <div className="rounded-2xl border border-dashed border-[#0066B4]/30 bg-[#EDF5FA]/60 p-3.5 transition hover:border-[#0066B4]">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F]">
-                      <UploadCloud size={15} />
-                      <span>{galleryUploading ? "Uploading..." : "Upload Image to Folder"}</span>
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F]">
+                      <UploadCloud size={16} />
+                      <span>
+                        {galleryUploading
+                          ? "Uploading Images..."
+                          : "Upload Image(s) to Folder"}
+                      </span>
                       <input
                         type="file"
+                        multiple
                         accept="image/*"
                         disabled={galleryUploading}
                         onChange={handleGalleryImageUpload}
@@ -1648,27 +1718,77 @@ export default function Admin() {
                       />
                     </label>
 
-                    {galleryForm.image && (
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                    {galleryUploadedImages.length > 0 ? (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
+                        <CheckCircle2 size={14} />
+                        {galleryUploadedImages.length === 1
+                          ? "1 image ready"
+                          : `${galleryUploadedImages.length} images ready`}
+                      </span>
+                    ) : galleryForm.image ? (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl">
                         <CheckCircle2 size={14} />
                         Image ready
                       </span>
-                    )}
+                    ) : null}
                   </div>
 
-                  {galleryForm.image && (
-                    <div className="flex items-center gap-3 pt-1">
-                      <img
-                        src={galleryForm.image}
-                        alt="Gallery preview"
-                        className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                      <span className="max-w-xs truncate text-[11px] text-slate-600">
-                        {galleryForm.image}
-                      </span>
+                  {/* Previews Grid for Multiple or Single Images */}
+                  {galleryUploadedImages.length > 0 && (
+                    <div className="mt-3 border-t border-slate-200/60 pt-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                          Selected Photos ({galleryUploadedImages.length})
+                        </span>
+                        {galleryUploadedImages.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGalleryUploadedImages([]);
+                              setGalleryForm((prev) => ({ ...prev, image: "" }));
+                            }}
+                            className="text-[11px] font-medium text-red-500 hover:underline"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid max-h-52 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 md:grid-cols-5">
+                        {galleryUploadedImages.map((img, idx) => (
+                          <div
+                            key={idx}
+                            className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                          >
+                            <img
+                              src={img.url}
+                              alt={`Upload ${idx + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setGalleryUploadedImages((prev) => {
+                                  const next = prev.filter((_, i) => i !== idx);
+                                  if (next.length > 0) {
+                                    setGalleryForm((f) => ({ ...f, image: next[0].url }));
+                                  } else {
+                                    setGalleryForm((f) => ({ ...f, image: "" }));
+                                  }
+                                  return next;
+                                });
+                              }}
+                              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600/90 text-white shadow-sm transition hover:bg-red-700"
+                              title="Remove photo"
+                            >
+                              <X size={10} />
+                            </button>
+                            <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-center text-[9px] text-white truncate">
+                              {img.filename}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1686,7 +1806,9 @@ export default function Admin() {
                   type="submit"
                   className="rounded-xl bg-[#0066B4] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:bg-[#00528F]"
                 >
-                  Add to Gallery
+                  {galleryUploadedImages.length > 1
+                    ? `Add ${galleryUploadedImages.length} Images to Gallery`
+                    : "Add to Gallery"}
                 </button>
               </div>
             </form>
