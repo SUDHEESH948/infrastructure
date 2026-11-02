@@ -247,20 +247,12 @@ const Footer = () => {
                 <motion.span
                   key={`onset-${i}`}
                   variants={letterVariants}
-                  className="inline-block transform-gpu text-[13.5vw] leading-[0.84] drop-shadow-lg"
+                  className="inline-block transform-gpu text-[14.5vw] leading-[0.84] drop-shadow-lg"
                 >
                   {char}
                 </motion.span>
               ))}
             </div>
-
-            {/* SEPARATOR / ARROW EMBLEM */}
-            <motion.span
-              variants={letterVariants}
-              className="inline-block transform-gpu text-[11vw] font-light leading-[0.84] text-cyan-200/80 px-1 sm:px-2"
-            >
-              /
-            </motion.span>
 
             {/* WORD 2: INFRA */}
             <div className="flex text-cyan-100">
@@ -268,7 +260,7 @@ const Footer = () => {
                 <motion.span
                   key={`infra-${i}`}
                   variants={letterVariants}
-                  className="inline-block transform-gpu text-[13.5vw] leading-[0.84] drop-shadow-lg"
+                  className="inline-block transform-gpu text-[14.5vw] leading-[0.84] drop-shadow-lg"
                 >
                   {char}
                 </motion.span>
