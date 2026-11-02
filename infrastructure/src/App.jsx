@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import Navigation from "./components/Navigation";
@@ -13,12 +13,28 @@ import AboutUs from "./pages/AboutUs";
 import Services from "./pages/Services";
 import Admin from "./pages/Admin";
 
+// Automatically scroll to the top of the page on route/page change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant",
+    });
+  }, [pathname]);
+
+  return null;
+}
+
 function AppContent() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <ScrollToTop />
       {/* Hide public navigation and footer on Admin routes */}
       {!isAdmin && <Navigation />}
 
