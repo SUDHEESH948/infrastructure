@@ -205,77 +205,54 @@ const Footer = () => {
         </motion.div>
 
         {/* ========================================================
-            3. BOTTOM ROW: LOGO FIRST, THEN ONSET INFRA LETTER BY LETTER
+            3. BOTTOM ROW: ONSET INFRA LETTER BY LETTER
         ======================================================== */}
         <div className="relative z-10 w-full overflow-hidden pb-2 sm:pb-4 select-none">
-          <div className="flex items-center gap-3 sm:gap-5 md:gap-7">
-            {/* 1. FIRST: THE WHITE OI LOGO */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.6, y: 35 }}
-              animate={
-                isRevealed
-                  ? { opacity: 1, scale: 1, y: 0 }
-                  : { opacity: 0, scale: 0.6, y: 35 }
-              }
-              transition={{
-                duration: 0.55,
-                delay: 0.12,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-xl ring-2 ring-white/30 sm:h-16 sm:w-16 sm:rounded-2xl md:h-20 md:w-20 md:rounded-3xl lg:h-24 lg:w-24"
-            >
-              <span className="text-lg font-black tracking-tight text-[#0066B4] sm:text-2xl md:text-3xl lg:text-4xl">
-                OI
-              </span>
-            </motion.div>
+          <div className="flex w-full items-baseline justify-between font-sans font-black uppercase tracking-tight text-white pr-2 sm:pr-4">
+            {/* WORD 1: ONSET */}
+            <div className="flex">
+              {wordOnset.map((char, i) => (
+                <motion.span
+                  key={`onset-${i}`}
+                  initial={{ opacity: 0, y: 50, scale: 0.92 }}
+                  animate={
+                    isRevealed
+                      ? { opacity: 1, y: 0, scale: 1 }
+                      : { opacity: 0, y: 50, scale: 0.92 }
+                  }
+                  transition={{
+                    duration: 0.5,
+                    delay: 0.15 + i * 0.07,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="inline-block transform-gpu text-[12vw] sm:text-[11.5vw] md:text-[11vw] lg:text-[10.5vw] leading-[0.85] drop-shadow-lg"
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </div>
 
-            {/* 2. THEN: ONSET INFRA LETTERS COMING ONE BY ONE */}
-            <div className="flex flex-nowrap items-baseline gap-2 sm:gap-4 font-sans font-black uppercase tracking-tight text-white">
-              {/* WORD 1: ONSET */}
-              <div className="flex">
-                {wordOnset.map((char, i) => (
-                  <motion.span
-                    key={`onset-${i}`}
-                    initial={{ opacity: 0, y: 50, scale: 0.92 }}
-                    animate={
-                      isRevealed
-                        ? { opacity: 1, y: 0, scale: 1 }
-                        : { opacity: 0, y: 50, scale: 0.92 }
-                    }
-                    transition={{
-                      duration: 0.5,
-                      delay: 0.28 + i * 0.07,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                    className="inline-block transform-gpu text-[10.5vw] sm:text-[10vw] md:text-[9.5vw] lg:text-[9vw] leading-[0.85] drop-shadow-lg"
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </div>
-
-              {/* WORD 2: INFRA */}
-              <div className="flex text-cyan-100">
-                {wordInfra.map((char, i) => (
-                  <motion.span
-                    key={`infra-${i}`}
-                    initial={{ opacity: 0, y: 50, scale: 0.92 }}
-                    animate={
-                      isRevealed
-                        ? { opacity: 1, y: 0, scale: 1 }
-                        : { opacity: 0, y: 50, scale: 0.92 }
-                    }
-                    transition={{
-                      duration: 0.5,
-                      delay: 0.28 + (wordOnset.length + i) * 0.07,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                    className="inline-block transform-gpu text-[10.5vw] sm:text-[10vw] md:text-[9.5vw] lg:text-[9vw] leading-[0.85] drop-shadow-lg"
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </div>
+            {/* WORD 2: INFRA */}
+            <div className="flex text-cyan-100">
+              {wordInfra.map((char, i) => (
+                <motion.span
+                  key={`infra-${i}`}
+                  initial={{ opacity: 0, y: 50, scale: 0.92 }}
+                  animate={
+                    isRevealed
+                      ? { opacity: 1, y: 0, scale: 1 }
+                      : { opacity: 0, y: 50, scale: 0.92 }
+                  }
+                  transition={{
+                    duration: 0.5,
+                    delay: 0.15 + (wordOnset.length + i) * 0.07,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="inline-block transform-gpu text-[12vw] sm:text-[11.5vw] md:text-[11vw] lg:text-[10.5vw] leading-[0.85] drop-shadow-lg"
+                >
+                  {char}
+                </motion.span>
+              ))}
             </div>
           </div>
         </div>
