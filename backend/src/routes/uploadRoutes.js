@@ -59,6 +59,8 @@ const upload = multer({
 
 const router = express.Router();
 
+import { removeUploadedFile } from "../utils/fileRemover.js";
+
 // @desc    Upload single image
 // @route   POST /api/upload
 // @access  Admin
@@ -82,6 +84,25 @@ router.post("/", upload.single("image"), (req, res) => {
     url: relativePath,
     size: req.file.size,
   });
+});
+
+// @desc    Delete uploaded image file from disk
+// @route   DELETE /api/upload
+// @access  Admin
+router.delete("/", (req, res) => {
+  const filePath = req.query.path || req.body.path;
+
+  if (!filePath) {
+    return res.status(400).json({ success: false, message: "File path is required" });
+  }
+
+  const deleted = removeUploadedFile(filePath);
+
+  if (deleted) {
+    return res.status(200).json({ success: true, message: "File deleted from uploads folder" });
+  }
+
+  return res.status(404).json({ success: false, message: "File not found or not in uploads folder" });
 });
 
 export default router;

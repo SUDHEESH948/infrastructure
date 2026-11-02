@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Gallery from "../models/Gallery.js";
 import { initialGalleryItems } from "../data/galleryData.js";
+import { removeUploadedFile } from "../utils/fileRemover.js";
 
 // In-memory store for fallback mode when MongoDB Atlas is offline/unconfigured
 let inMemoryGallery = [...initialGalleryItems];
@@ -116,28 +117,43 @@ export const deleteGalleryItem = async (req, res) => {
     const { id } = req.params;
 
     if (mongoose.connection.readyState === 1) {
-      const item = await Gallery.findOneAndDelete({
-        $or: [{ galleryId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
-      });
+      const query = mongoose.isValidObjectId(id)
+        ? { $or: [{ galleryId: id }, { _id: id }] }
+        : { galleryId: id };
+
+      const item = await Gallery.findOneAndDelete(query);
       inMemoryGallery = inMemoryGallery.filter(
         (i) => i.galleryId !== id && i._id?.toString() !== id
       );
       if (!item) {
         return res.status(404).json({ success: false, message: "Gallery item not found" });
       }
-      return res.status(200).json({ success: true, message: "Gallery item deleted" });
+
+      // Automatically delete the uploaded file from uploads/ folder
+      if (item.image) {
+        removeUploadedFile(item.image);
+      }
+
+      return res.status(200).json({ success: true, message: "Gallery item deleted successfully" });
     }
 
     // In-memory fallback
-    const initialLen = inMemoryGallery.length;
-    inMemoryGallery = inMemoryGallery.filter((i) => i.galleryId !== id);
-    if (inMemoryGallery.length === initialLen) {
+    const targetItem = inMemoryGallery.find(
+      (i) => i.galleryId === id || i._id?.toString() === id
+    );
+    if (!targetItem) {
       return res.status(404).json({ success: false, message: "Gallery item not found" });
     }
 
+    if (targetItem.image) {
+      removeUploadedFile(targetItem.image);
+    }
+
+    inMemoryGallery = inMemoryGallery.filter((i) => i.galleryId !== id && i._id !== id);
+
     res.status(200).json({
       success: true,
-      message: "Gallery item deleted from in-memory store",
+      message: "Gallery item and image file deleted successfully",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

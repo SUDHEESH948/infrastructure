@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Project from "../models/Project.js";
 import { initialProjects } from "../data/projectsData.js";
+import { removeUploadedFile } from "../utils/fileRemover.js";
 
 // In-memory store for fallback mode
 let inMemoryProjects = [...initialProjects];
@@ -170,23 +171,41 @@ export const updateProject = async (req, res) => {
     const { id } = req.params;
 
     if (mongoose.connection.readyState === 1) {
-      let project = await Project.findOneAndUpdate(
-        { $or: [{ projectId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
+      // Find existing project first to check if image is being replaced
+      const query = mongoose.isValidObjectId(id)
+        ? { $or: [{ projectId: id }, { _id: id }] }
+        : { projectId: id };
+
+      const existingProject = await Project.findOne(query);
+
+      if (!existingProject) {
+        return res.status(404).json({ success: false, message: "Project not found" });
+      }
+
+      // If a new image is provided and differs from old image, delete the old image file
+      if (req.body.image && existingProject.image && req.body.image !== existingProject.image) {
+        removeUploadedFile(existingProject.image);
+      }
+
+      const project = await Project.findOneAndUpdate(
+        { _id: existingProject._id },
         req.body,
         { new: true, runValidators: true }
       );
 
-      if (project) {
-        const index = inMemoryProjects.findIndex((p) => p.projectId === id || p._id === id);
-        if (index !== -1) inMemoryProjects[index] = project.toObject();
-        return res.status(200).json({ success: true, source: "database", data: project });
-      }
+      const index = inMemoryProjects.findIndex((p) => p.projectId === id || p._id === id);
+      if (index !== -1) inMemoryProjects[index] = project.toObject();
+      return res.status(200).json({ success: true, source: "database", data: project });
     }
 
     // In-memory fallback
     const index = inMemoryProjects.findIndex((p) => p.projectId === id || p._id === id);
     if (index === -1) {
       return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    if (req.body.image && inMemoryProjects[index].image && req.body.image !== inMemoryProjects[index].image) {
+      removeUploadedFile(inMemoryProjects[index].image);
     }
 
     inMemoryProjects[index] = {
@@ -217,28 +236,41 @@ export const deleteProject = async (req, res) => {
     const { id } = req.params;
 
     if (mongoose.connection.readyState === 1) {
-      const project = await Project.findOneAndDelete({
-        $or: [{ projectId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
-      });
+      const query = mongoose.isValidObjectId(id)
+        ? { $or: [{ projectId: id }, { _id: id }] }
+        : { projectId: id };
+
+      const project = await Project.findOneAndDelete(query);
       inMemoryProjects = inMemoryProjects.filter(
         (p) => p.projectId !== id && p._id?.toString() !== id
       );
       if (!project) {
         return res.status(404).json({ success: false, message: "Project not found" });
       }
-      return res.status(200).json({ success: true, message: "Project deleted successfully" });
+
+      // Automatically remove uploaded image file from uploads/projects folder
+      if (project.image) {
+        removeUploadedFile(project.image);
+      }
+
+      return res.status(200).json({ success: true, message: "Project and image deleted successfully" });
     }
 
     // In-memory fallback
-    const initLen = inMemoryProjects.length;
-    inMemoryProjects = inMemoryProjects.filter((p) => p.projectId !== id && p._id !== id);
-    if (inMemoryProjects.length === initLen) {
+    const targetProject = inMemoryProjects.find((p) => p.projectId === id || p._id === id);
+    if (!targetProject) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
+    if (targetProject.image) {
+      removeUploadedFile(targetProject.image);
+    }
+
+    inMemoryProjects = inMemoryProjects.filter((p) => p.projectId !== id && p._id !== id);
+
     res.status(200).json({
       success: true,
-      message: "Project deleted from in-memory store",
+      message: "Project and image deleted from in-memory store",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
