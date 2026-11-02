@@ -1,33 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Phone,
-  MapPin,
-  ArrowUp,
-  Mail,
-  Check,
-  ArrowRight,
-  ShieldCheck,
-  Building,
-} from "lucide-react";
-import logo from "../assets/logo/onsite infra.png";
+import { motion } from "framer-motion";
+import { Phone, MapPin } from "lucide-react";
 
-// Letters for unified staggered cinematic reveal
+// Individual letters for staggered reveal
 const wordOnset = ["O", "N", "S", "E", "T"];
 const wordInfra = ["I", "N", "F", "R", "A"];
 
-// Framer Motion Animation Variants
-const footerVariants = {
-  hidden: {
-    opacity: 0,
-    y: 60,
-  },
+// Animation variants
+const logoVariants = {
+  hidden: { opacity: 0, scale: 0.65, y: 15 },
   visible: {
     opacity: 1,
+    scale: 1,
     y: 0,
     transition: {
-      duration: 0.85,
+      duration: 0.55,
+      delay: 0.1,
       ease: [0.16, 1, 0.3, 1],
     },
   },
@@ -38,25 +27,8 @@ const brandContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const logoVariants = {
-  hidden: {
-    opacity: 0,
-    scale: 0.7,
-    y: 35,
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      duration: 0.75,
-      ease: [0.16, 1, 0.3, 1],
+      staggerChildren: 0.045,
+      delayChildren: 0.2,
     },
   },
 };
@@ -64,365 +36,299 @@ const logoVariants = {
 const letterVariants = {
   hidden: {
     opacity: 0,
-    y: 35,
-    scale: 0.9,
-    filter: "blur(6px)",
+    y: 18,
   },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    filter: "blur(0px)",
     transition: {
-      duration: 0.65,
+      duration: 0.45,
       ease: [0.16, 1, 0.3, 1],
     },
   },
 };
 
 const subtitleVariants = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-  },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.7,
-      delay: 0.55,
+      duration: 0.5,
+      delay: 0.65,
       ease: [0.16, 1, 0.3, 1],
     },
   },
 };
 
+const descriptionVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      delay: 0.75,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
+const phoneVariants = {
+  hidden: { opacity: 0, x: 20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.55,
+      delay: 0.85,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
+const locationVariants = {
+  hidden: { opacity: 0, x: 20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.55,
+      delay: 0.95,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
+const bottomStripVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      delay: 1.05,
+    },
+  },
+};
+
 const Footer = () => {
-  const [email, setEmail] = useState("");
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const footerRef = useRef(null);
+  const spacerRef = useRef(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const [isRevealed, setIsRevealed] = useState(false);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Measure dynamic footer height for the natural document flow spacer
+  useEffect(() => {
+    const updateHeight = () => {
+      if (footerRef.current) {
+        setFooterHeight(footerRef.current.offsetHeight);
+      }
+    };
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email || !email.includes("@")) return;
-    setIsSubscribed(true);
-    setTimeout(() => {
-      setIsSubscribed(false);
-      setEmail("");
-    }, 3500);
-  };
+    updateHeight();
+    const ro = new ResizeObserver(updateHeight);
+    if (footerRef.current) ro.observe(footerRef.current);
+    window.addEventListener("resize", updateHeight);
 
-  const navLinks = [
-    { label: "Home", to: "/" },
-    { label: "Services", to: "/services" },
-    { label: "Selected Projects", to: "/projects" },
-    { label: "About Us", to: "/about" },
-    { label: "Contact", to: "/contact" },
-  ];
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
+
+  // Trigger branding animation when footer scrolls into view
+  useEffect(() => {
+    if (!spacerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsRevealed(true);
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -40px 0px",
+      }
+    );
+
+    observer.observe(spacerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <motion.footer
-      id="footer"
-      variants={footerVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.12 }}
-      className="relative overflow-hidden bg-gradient-to-b from-[#005599] via-[#0066B4] to-[#003d73] text-white shadow-[0_-25px_60px_rgba(0,102,180,0.18)]"
-    >
-      {/* SOPHISTICATED AMBIENT BACKGROUND GLOWS */}
-      <div className="pointer-events-none absolute -right-32 -top-32 h-[450px] w-[450px] rounded-full bg-white/[0.04] blur-[80px]" />
-      <div className="pointer-events-none absolute -left-32 bottom-0 h-[350px] w-[350px] rounded-full bg-cyan-400/[0.06] blur-[80px]" />
+    <>
+      {/* 
+        NATURAL DOCUMENT SPACER:
+        Sits in normal document flow below <main>. As user scrolls down,
+        this space scrolls into view, allowing the main content to slide
+        upward like a curtain and reveal the fixed footer underneath.
+      */}
+      <div
+        ref={spacerRef}
+        style={{ height: footerHeight ? `${footerHeight}px` : "auto" }}
+        className="w-full pointer-events-none -z-10"
+        aria-hidden="true"
+      />
 
-      {/* SUBTLE ARCHITECTURAL GRID PATTERN */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      {/* 
+        FIXED CINEMATIC FOOTER LAYER:
+        Stationed at the bottom of the viewport behind main content (z-0).
+        Remains hidden until the main content is scrolled upward.
+      */}
+      <footer
+        id="footer"
+        ref={footerRef}
+        style={{
+          pointerEvents: isRevealed ? "auto" : "none",
+        }}
+        className="fixed bottom-0 left-0 right-0 w-full z-0 overflow-hidden bg-[#0066B4] text-white"
+      >
+        {/* SUBTLE CIRCULAR DECORATIVE OUTLINE */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full border border-white/10" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 py-12 md:px-10 md:py-16">
-        {/* ========================================================
-            CINEMATIC HERO BRAND REVEAL CENTERPIECE
-        ======================================================== */}
-        <motion.div
-          variants={brandContainerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          className="mb-12 border-b border-white/15 pb-10 md:mb-14 md:pb-12"
-        >
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-              {/* ANIMATED LOGO EMBLEM */}
-              <motion.div
-                variants={logoVariants}
-                className="group relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white p-2.5 shadow-2xl ring-2 ring-white/40 transition-transform duration-500 hover:scale-105 sm:h-20 sm:w-20 sm:rounded-3xl sm:p-3.5 md:h-24 md:w-24"
-              >
-                <div className="absolute inset-0 rounded-2xl bg-cyan-400/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100 sm:rounded-3xl" />
-                <img
-                  src={logo}
-                  alt="ONSET INFRA Logo"
-                  className="relative z-10 h-full w-full object-contain drop-shadow"
-                />
-              </motion.div>
-
-              {/* STAGGERED CINEMATIC LETTERS */}
-              <div className="flex flex-col">
-                <h1 className="flex flex-wrap font-sans text-4xl font-black uppercase tracking-tight text-white leading-none sm:text-6xl md:text-7xl lg:text-8xl">
-                  {/* WORD 1: ONSET */}
-                  <span className="mr-3 flex sm:mr-5">
-                    {wordOnset.map((char, i) => (
-                      <motion.span
-                        key={`onset-${i}`}
-                        variants={letterVariants}
-                        className="inline-block transform-gpu select-none drop-shadow-md"
-                      >
-                        {char}
-                      </motion.span>
-                    ))}
-                  </span>
-
-                  {/* WORD 2: INFRA */}
-                  <span className="flex text-cyan-200">
-                    {wordInfra.map((char, i) => (
-                      <motion.span
-                        key={`infra-${i}`}
-                        variants={letterVariants}
-                        className="inline-block transform-gpu select-none drop-shadow-md"
-                      >
-                        {char}
-                      </motion.span>
-                    ))}
-                  </span>
-                </h1>
-
-                {/* SUBTITLE */}
+        <div className="relative z-10 mx-auto max-w-7xl px-5 py-10 md:px-10 md:py-12">
+          {/* COMPACT MAIN ROW */}
+          <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
+            {/* BRAND */}
+            <div>
+              <div className="flex items-center gap-3">
+                {/* 1. ANIMATED WHITE OI LOGO IN ROUNDED SQUARE */}
                 <motion.div
-                  variants={subtitleVariants}
-                  className="mt-3 flex items-center gap-3"
+                  variants={logoVariants}
+                  initial="hidden"
+                  animate={isRevealed ? "visible" : "hidden"}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white font-bold text-[#0066B4] shadow-md ring-1 ring-white/30 sm:h-12 sm:w-12"
                 >
-                  <span className="h-px w-8 bg-cyan-300" />
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/85 sm:text-xs">
-                    Engineers &bull; Contractors &bull; Interior Designers
-                  </p>
+                  <span className="text-base font-extrabold tracking-tight text-[#0066B4] sm:text-lg">
+                    OI
+                  </span>
                 </motion.div>
+
+                <div>
+                  {/* 2. ONSET INFRA STAGGERED LETTER ANIMATION */}
+                  <motion.h2
+                    variants={brandContainerVariants}
+                    initial="hidden"
+                    animate={isRevealed ? "visible" : "hidden"}
+                    className="flex items-center text-lg font-bold tracking-wider text-white select-none sm:text-xl"
+                  >
+                    <span className="mr-2 flex">
+                      {wordOnset.map((char, i) => (
+                        <motion.span
+                          key={`onset-${i}`}
+                          variants={letterVariants}
+                          className="inline-block transform-gpu"
+                        >
+                          {char}
+                        </motion.span>
+                      ))}
+                    </span>
+                    <span className="flex">
+                      {wordInfra.map((char, i) => (
+                        <motion.span
+                          key={`infra-${i}`}
+                          variants={letterVariants}
+                          className="inline-block transform-gpu"
+                        >
+                          {char}
+                        </motion.span>
+                      ))}
+                    </span>
+                  </motion.h2>
+
+                  {/* 3. ENGINEERS AND INTERIOR DESIGNERS SUBTITLE */}
+                  <motion.p
+                    variants={subtitleVariants}
+                    initial="hidden"
+                    animate={isRevealed ? "visible" : "hidden"}
+                    className="text-[10px] uppercase tracking-widest text-white/70"
+                  >
+                    Engineers and Interior Designers
+                  </motion.p>
+                </div>
               </div>
+
+              {/* 4. COMPANY DESCRIPTION */}
+              <motion.p
+                variants={descriptionVariants}
+                initial="hidden"
+                animate={isRevealed ? "visible" : "hidden"}
+                className="mt-3 max-w-sm text-xs leading-5 text-white/80"
+              >
+                Building &amp; road contractors, interior designers, modular
+                kitchens, statutory permits, Airport NOC, GPS surveying,
+                renovation, and 3D visualization.
+              </motion.p>
             </div>
 
-            {/* BRAND ETHOS BADGE */}
-            <motion.div
-              variants={subtitleVariants}
-              className="hidden max-w-xs flex-col items-end text-right lg:flex"
-            >
-              <span className="rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-cyan-200 backdrop-blur-sm">
-                Infrastructure Excellence
-              </span>
-              <p className="mt-2 text-xs leading-relaxed text-white/70">
-                Building tomorrow&apos;s landmarks with structural precision and
-                bespoke architectural craftsmanship.
-              </p>
-            </motion.div>
-          </div>
-        </motion.div>
+            {/* CONTACT INFO (INLINE) */}
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+              {/* PHONE */}
+              <motion.a
+                variants={phoneVariants}
+                initial="hidden"
+                animate={isRevealed ? "visible" : "hidden"}
+                href="tel:+917559034444"
+                className="group flex items-center gap-3 transition-colors hover:text-white"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white transition-colors group-hover:bg-white group-hover:text-[#0066B4]">
+                  <Phone size={14} />
+                </div>
+                <div>
+                  <span className="block text-[9px] uppercase tracking-wider text-white/50">
+                    Phone
+                  </span>
+                  <span className="text-xs font-medium text-white">
+                    +91 75590 34444
+                  </span>
+                </div>
+              </motion.a>
 
-        {/* ========================================================
-            NAVIGATION, DESCRIPTION & NEWSLETTER FORM
-        ======================================================== */}
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
-          {/* BRAND DESCRIPTION & NAVIGATION LINKS */}
-          <div className="space-y-6 lg:col-span-6">
-            <p className="max-w-md text-xs font-light leading-relaxed text-white/85 sm:text-sm">
-              Pioneering comprehensive building &amp; road contracting, luxury
-              interior design, modular spaces, statutory local permits, Airport
-              NOC, precision GPS surveying, and photorealistic 3D visualization.
+              {/* LOCATION */}
+              <motion.div
+                variants={locationVariants}
+                initial="hidden"
+                animate={isRevealed ? "visible" : "hidden"}
+                className="flex items-center gap-3"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
+                  <MapPin size={14} />
+                </div>
+                <div>
+                  <span className="block text-[9px] uppercase tracking-wider text-white/50">
+                    Location
+                  </span>
+                  <span className="text-xs text-white/80">
+                    Puthiyatheru, Kannur - 670011
+                  </span>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* BOTTOM STRIP */}
+          <motion.div
+            variants={bottomStripVariants}
+            initial="hidden"
+            animate={isRevealed ? "visible" : "hidden"}
+            className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-5 text-xs sm:flex-row"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-white/50">
+              &copy; {new Date().getFullYear()} ONSET INFRA &bull; Engineers and
+              Interior Designers. All rights reserved.
             </p>
 
-            {/* QUICK NAVIGATION LINKS WITH ANIMATED UNDERLINE HIGHLIGHTS */}
-            <nav
-              className="flex flex-wrap items-center gap-x-7 gap-y-3 pt-1"
-              aria-label="Footer Navigation"
+            <Link
+              to="/admin"
+              className="text-[11px] font-medium text-white/50 transition-colors hover:text-white"
             >
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={scrollToTop}
-                  className="group relative inline-flex items-center py-1 text-xs font-semibold uppercase tracking-wider text-white/80 transition-colors duration-300 hover:text-white"
-                >
-                  <span>{link.label}</span>
-                  <span className="absolute bottom-0 left-0 h-[2px] w-0 rounded-full bg-cyan-200 transition-all duration-300 ease-out group-hover:w-full" />
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* NEWSLETTER / FORM CONTROLS WITH CLEAN MICRO-INTERACTIONS */}
-          <div className="relative flex flex-col justify-center overflow-hidden rounded-3xl border border-white/20 bg-white/[0.08] p-7 shadow-2xl backdrop-blur-xl md:p-8 lg:col-span-6">
-            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 -translate-y-4 translate-x-4 rounded-full bg-white/5 blur-xl" />
-
-            <div className="mb-5">
-              <span className="mb-2.5 inline-block rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-cyan-200">
-                Stay Connected
-              </span>
-              <h3 className="text-lg font-bold text-white sm:text-xl">
-                Receive engineering updates &amp; design insights
-              </h3>
-              <p className="mt-1 text-xs text-white/75">
-                Join our newsletter for featured infrastructure releases, design
-                trends, and permit guides.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubscribe} className="relative">
-              <div
-                className={`relative flex flex-col gap-3 rounded-2xl transition-all duration-300 sm:flex-row sm:items-center ${
-                  isFocused ? "ring-2 ring-white/60" : ""
-                }`}
-              >
-                <div className="relative flex-1">
-                  <Mail
-                    size={17}
-                    className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
-                      isFocused ? "text-white" : "text-white/60"
-                    }`}
-                  />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholder="Enter your email address..."
-                    required
-                    className="w-full rounded-2xl border border-white/30 bg-white/10 py-3.5 pl-11 pr-4 text-xs text-white placeholder-white/50 shadow-inner backdrop-blur-md transition-all duration-300 focus:border-white focus:bg-white/20 focus:outline-none focus:ring-0"
-                  />
-                </div>
-
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={isSubscribed}
-                  className={`inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-all duration-300 ${
-                    isSubscribed
-                      ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                      : "bg-white text-[#0066B4] hover:bg-slate-50 hover:shadow-xl"
-                  }`}
-                >
-                  <AnimatePresence mode="wait">
-                    {isSubscribed ? (
-                      <motion.span
-                        key="subbed"
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        className="inline-flex items-center gap-1.5"
-                      >
-                        <Check size={15} className="stroke-[3]" />
-                        <span>Subscribed!</span>
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        key="sub"
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        className="inline-flex items-center gap-1.5"
-                      >
-                        <span>Subscribe</span>
-                        <ArrowRight
-                          size={14}
-                          className="transition-transform duration-200 group-hover:translate-x-1"
-                        />
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-              </div>
-            </form>
-          </div>
+              Admin Portal
+            </Link>
+          </motion.div>
         </div>
-
-        {/* ========================================================
-            CONTACT INFO CHIPS & BACK TO TOP
-        ======================================================== */}
-        <div className="mt-12 flex flex-col items-start justify-between gap-6 border-t border-white/15 pt-8 sm:flex-row sm:items-center">
-          <div className="flex flex-wrap items-center gap-6 sm:gap-10">
-            {/* PHONE CHIP */}
-            <a
-              href="tel:+917559034444"
-              className="group flex items-center gap-3.5 transition-all duration-300 hover:translate-x-1"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white transition-all duration-300 group-hover:bg-white group-hover:text-[#0066B4] group-hover:shadow-lg">
-                <Phone
-                  size={17}
-                  className="transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                  Direct Line
-                </span>
-                <span className="text-xs font-semibold text-white transition-colors duration-200 sm:text-sm">
-                  +91 75590 34444
-                </span>
-              </div>
-            </a>
-
-            {/* LOCATION CHIP */}
-            <div className="group flex items-center gap-3.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white transition-all duration-300 group-hover:bg-white/20">
-                <MapPin
-                  size={17}
-                  className="transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                  Headquarters
-                </span>
-                <span className="text-xs font-medium text-white/90 sm:text-sm">
-                  Puthiyatheru, Kannur - 670011
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* BACK TO TOP BUTTON */}
-          <motion.button
-            onClick={scrollToTop}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="group flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-xs font-semibold text-white shadow-md backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white hover:text-[#0066B4] hover:shadow-xl"
-            title="Scroll back to top"
-          >
-            <span>Back to Top</span>
-            <ArrowUp
-              size={14}
-              className="transition-transform duration-300 group-hover:-translate-y-1"
-            />
-          </motion.button>
-        </div>
-
-        {/* ========================================================
-            BOTTOM COPYRIGHT STRIP
-        ======================================================== */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs sm:flex-row">
-          <p className="text-center text-[11px] font-medium uppercase tracking-widest text-white/60 sm:text-left">
-            &copy; {new Date().getFullYear()} ONSET INFRA &bull; Engineers and
-            Interior Designers. All rights reserved.
-          </p>
-
-          <Link
-            to="/admin"
-            className="group relative inline-flex items-center gap-1.5 py-1 text-[11px] font-semibold text-white/70 transition-colors duration-300 hover:text-white"
-          >
-            <ShieldCheck size={14} className="text-cyan-200" />
-            <span>Admin Portal</span>
-            <span className="absolute bottom-0 left-0 h-[1px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full" />
-          </Link>
-        </div>
-      </div>
-    </motion.footer>
+      </footer>
+    </>
   );
 };
 

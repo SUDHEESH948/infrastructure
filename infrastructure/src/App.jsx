@@ -22,7 +22,7 @@ function AppContent() {
       {!isAdmin && <Navigation />}
 
       {/* PAGE CONTENT */}
-      <main className="flex-grow">
+      <main className="relative z-10 flex-grow bg-white shadow-[0_25px_60px_rgba(0,0,0,0.18)]">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
