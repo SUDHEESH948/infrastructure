@@ -104,11 +104,14 @@ const Footer = () => {
         style={{
           pointerEvents: isRevealed ? "auto" : "none",
         }}
-        className="fixed bottom-0 left-0 right-0 w-full z-0 h-[82vh] min-h-[580px] max-h-[820px] bg-gradient-to-b from-[#005ea8] via-[#0066B4] to-[#004780] text-white flex flex-col justify-between overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16"
+        className="fixed bottom-0 left-0 right-0 w-full z-0 h-[82vh] min-h-[580px] max-h-[820px] bg-gradient-to-b from-[#005ea8] via-[#0066B4] to-[#003866] text-white flex flex-col justify-between overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16 shadow-[inset_0_-50px_90px_rgba(0,0,0,0.5)]"
       >
         {/* SUBTLE AMBIENT LIGHTING OVERLAYS */}
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-white/[0.04] blur-3xl" />
         <div className="pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-cyan-400/[0.05] blur-3xl" />
+
+        {/* BOTTOM FLOOR SHADOW GRADIENT VIGNETTE */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-black/55 via-black/20 to-transparent z-0" />
 
         {/* ========================================================
             1. TOP ROW: COPYRIGHT ON LEFT, NAVIGATION ON RIGHT
@@ -207,8 +210,8 @@ const Footer = () => {
         {/* ========================================================
             3. BOTTOM ROW: ONSET INFRA LETTER BY LETTER
         ======================================================== */}
-        <div className="relative z-10 w-full overflow-hidden pb-2 sm:pb-4 select-none">
-          <div className="flex w-full items-baseline justify-between font-sans font-black uppercase tracking-tight text-white pr-2 sm:pr-4">
+        <div className="relative z-10 w-full overflow-hidden pb-1 sm:pb-3 select-none">
+          <div className="flex w-full items-baseline justify-start gap-3.5 sm:gap-6 md:gap-8 font-sans font-black uppercase tracking-tighter text-white">
             {/* WORD 1: ONSET */}
             <div className="flex">
               {wordOnset.map((char, i) => (
@@ -225,7 +228,7 @@ const Footer = () => {
                     delay: 0.15 + i * 0.07,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="inline-block transform-gpu text-[12vw] sm:text-[11.5vw] md:text-[11vw] lg:text-[10.5vw] leading-[0.85] drop-shadow-lg"
+                  className="inline-block transform-gpu text-[14vw] sm:text-[14.5vw] md:text-[15vw] lg:text-[15.5vw] leading-[0.82] drop-shadow-[0_16px_28px_rgba(0,0,0,0.55)]"
                 >
                   {char}
                 </motion.span>
@@ -248,7 +251,7 @@ const Footer = () => {
                     delay: 0.15 + (wordOnset.length + i) * 0.07,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="inline-block transform-gpu text-[12vw] sm:text-[11.5vw] md:text-[11vw] lg:text-[10.5vw] leading-[0.85] drop-shadow-lg"
+                  className="inline-block transform-gpu text-[14vw] sm:text-[14.5vw] md:text-[15vw] lg:text-[15.5vw] leading-[0.82] drop-shadow-[0_16px_28px_rgba(0,0,0,0.55)]"
                 >
                   {char}
                 </motion.span>
