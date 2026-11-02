@@ -29,7 +29,6 @@ const projectSchema = new mongoose.Schema(
     },
     location: {
       type: String,
-      required: [true, "Location is required"],
       default: "Kerala",
     },
     image: {

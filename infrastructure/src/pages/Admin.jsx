@@ -1407,36 +1407,21 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Location & Icon Theme (Balanced 2-column Grid) */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={projectForm.location}
-                    onChange={(e) => setProjectForm({ ...projectForm, location: e.target.value })}
-                    placeholder="e.g. Kannur / Kerala"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">
-                    Icon Theme
-                  </label>
-                  <select
-                    value={projectForm.iconName}
-                    onChange={(e) => setProjectForm({ ...projectForm, iconName: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                  >
-                    <option value="Building2">Building</option>
-                    <option value="Route">Highway / Road</option>
-                    <option value="Map">Surveying / Map</option>
-                    <option value="HardHat">Management / Safety</option>
-                  </select>
-                </div>
+              {/* Icon Theme */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-600">
+                  Icon Theme
+                </label>
+                <select
+                  value={projectForm.iconName}
+                  onChange={(e) => setProjectForm({ ...projectForm, iconName: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
+                >
+                  <option value="Building2">Building</option>
+                  <option value="Route">Highway / Road</option>
+                  <option value="Map">Surveying / Map</option>
+                  <option value="HardHat">Management / Safety</option>
+                </select>
               </div>
 
               <div>
