@@ -986,7 +986,7 @@ export default function Admin() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Project Image (Upload to Folder or Custom Path)
+                  Project Image
                 </label>
 
                 <div className="mt-1 flex flex-col gap-2 rounded-2xl border border-dashed border-[#0066B4]/30 bg-[#EDF5FA]/60 p-3.5 transition hover:border-[#0066B4]">
@@ -1003,18 +1003,13 @@ export default function Admin() {
                       />
                     </label>
 
-                    <span className="text-[10px] text-slate-500">
-                      Stores to: <code className="rounded bg-white px-1.5 py-0.5 font-semibold text-[#0066B4]">backend/uploads/projects</code>
-                    </span>
+                    {projectForm.image && (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                        <CheckCircle2 size={14} />
+                        Image ready
+                      </span>
+                    )}
                   </div>
-
-                  <input
-                    type="text"
-                    value={projectForm.image}
-                    onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
-                    placeholder="/projects/building-construction.jpg or /uploads/projects/..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
-                  />
 
                   {projectForm.image && (
                     <div className="flex items-center gap-3 pt-1">
@@ -1146,7 +1141,7 @@ export default function Admin() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Gallery Image (Upload to Folder or URL) *
+                  Gallery Image *
                 </label>
 
                 <div className="mt-1 flex flex-col gap-2 rounded-2xl border border-dashed border-[#0066B4]/30 bg-[#EDF5FA]/60 p-3.5 transition hover:border-[#0066B4]">
@@ -1163,19 +1158,13 @@ export default function Admin() {
                       />
                     </label>
 
-                    <span className="text-[10px] text-slate-500">
-                      Stores to: <code className="rounded bg-white px-1.5 py-0.5 font-semibold text-[#0066B4]">backend/uploads/gallery</code>
-                    </span>
+                    {galleryForm.image && (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                        <CheckCircle2 size={14} />
+                        Image ready
+                      </span>
+                    )}
                   </div>
-
-                  <input
-                    type="text"
-                    required
-                    value={galleryForm.image}
-                    onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })}
-                    placeholder="/uploads/gallery/... or https://..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
-                  />
                 </div>
               </div>
 
