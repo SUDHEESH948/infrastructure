@@ -1726,7 +1726,7 @@ export default function Admin() {
                     Gallery Media (Photos & Videos) *
                   </label>
                   <span className="text-[10px] font-medium text-[#0066B4] bg-[#0066B4]/10 px-2 py-0.5 rounded-full">
-                    3MP+ Photos & Videos up to 100MB
+                    3MP+ Photos & Videos up to 10MB
                   </span>
                 </div>
 
