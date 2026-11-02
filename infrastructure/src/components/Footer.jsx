@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Phone, MapPin } from "lucide-react";
+import logo from "../assets/logo/onsite infra.png";
 
 // Individual letters for staggered reveal of ONSET INFRA
 const wordOnset = ["O", "N", "S", "E", "T"];
@@ -113,8 +114,30 @@ const Footer = () => {
           animate={isRevealed ? "visible" : "hidden"}
           className="relative z-10 my-auto flex flex-col justify-between gap-8 py-4 lg:flex-row lg:items-end"
         >
-          {/* EDITORIAL HEADLINE */}
+          {/* BRAND & EDITORIAL HEADLINE */}
           <div className="max-w-2xl">
+            {/* OFFICIAL COMPANY LOGO */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 15 }}
+              animate={
+                isRevealed
+                  ? { opacity: 1, scale: 1, y: 0 }
+                  : { opacity: 0, scale: 0.9, y: 15 }
+              }
+              transition={{
+                duration: 0.55,
+                delay: 0.08,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="mb-5 sm:mb-6 inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2.5 sm:px-5 sm:py-3 shadow-xl ring-1 ring-white/40 transition-transform duration-300 hover:scale-105"
+            >
+              <img
+                src={logo}
+                alt="ONSET INFRA"
+                className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+              />
+            </motion.div>
+
             <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl">
               Engineers and
               <br />
