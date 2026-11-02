@@ -98,7 +98,7 @@ const defaultProjects = [
   },
 ];
 
-const categories = [
+const defaultCategories = [
   "All",
   "Infrastructure",
   "Construction",
@@ -111,6 +111,17 @@ const OurProjects = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectList, setProjectList] = useState(defaultProjects);
+
+  // Dynamically compute all categories from default + live projects
+  const categories = [
+    "All",
+    ...Array.from(
+      new Set([
+        ...defaultCategories.filter((c) => c !== "All"),
+        ...projectList.map((p) => p.category).filter(Boolean),
+      ])
+    ),
+  ];
 
   // Fetch live projects from backend API and auto-refresh on focus/updates
   useEffect(() => {

@@ -16,15 +16,7 @@ const projectSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, "Category is required"],
-      enum: [
-        "Infrastructure",
-        "Construction",
-        "Surveying",
-        "Project Management",
-        "Consultancy",
-        "Interiors",
-        "Other",
-      ],
+      trim: true,
       default: "Infrastructure",
     },
     description: {

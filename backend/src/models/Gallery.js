@@ -16,13 +16,7 @@ const gallerySchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, "Category is required"],
-      enum: [
-        "Infrastructure",
-        "Construction",
-        "Surveying",
-        "Project Management",
-        "Other",
-      ],
+      trim: true,
       default: "Infrastructure",
     },
     image: {

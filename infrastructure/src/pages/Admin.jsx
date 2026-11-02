@@ -22,6 +22,8 @@ import {
   ArrowLeft,
   Search,
   UploadCloud,
+  Check,
+  Tag,
 } from "lucide-react";
 import {
   fetchProjectsFromAPI,
@@ -97,6 +99,100 @@ export default function Admin() {
     category: "Infrastructure",
     image: "",
   });
+
+  // Custom Categories State with localStorage Persistence
+  const [customProjectCategories, setCustomProjectCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem("onset_custom_project_categories");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [customGalleryCategories, setCustomGalleryCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem("onset_custom_gallery_categories");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isAddingNewGalleryCat, setIsAddingNewGalleryCat] = useState(false);
+  const [newGalleryCatInput, setNewGalleryCatInput] = useState("");
+
+  const [isAddingNewProjectCat, setIsAddingNewProjectCat] = useState(false);
+  const [newProjectCatInput, setNewProjectCatInput] = useState("");
+
+  // Dynamically compute all categories from defaults + custom + live data
+  const allGalleryCategories = Array.from(
+    new Set([
+      ...GALLERY_CATEGORIES.filter((c) => c !== "All"),
+      ...customGalleryCategories,
+      ...galleryItems.map((item) => item.category).filter(Boolean),
+    ])
+  );
+
+  const allProjectCategories = Array.from(
+    new Set([
+      ...PROJECT_CATEGORIES.filter((c) => c !== "All"),
+      ...customProjectCategories,
+      ...projects.map((p) => p.category).filter(Boolean),
+    ])
+  );
+
+  const handleAddGalleryCategory = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = newGalleryCatInput.trim();
+    if (!trimmed) return;
+
+    const formatted = trimmed
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+    if (!customGalleryCategories.includes(formatted)) {
+      const updated = [...customGalleryCategories, formatted];
+      setCustomGalleryCategories(updated);
+      try {
+        localStorage.setItem("onset_custom_gallery_categories", JSON.stringify(updated));
+      } catch (err) {
+        console.warn("localStorage write failed:", err);
+      }
+    }
+
+    setGalleryForm((prev) => ({ ...prev, category: formatted }));
+    setNewGalleryCatInput("");
+    setIsAddingNewGalleryCat(false);
+    showNotification(`Category "${formatted}" added and selected!`);
+  };
+
+  const handleAddProjectCategory = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = newProjectCatInput.trim();
+    if (!trimmed) return;
+
+    const formatted = trimmed
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+    if (!customProjectCategories.includes(formatted)) {
+      const updated = [...customProjectCategories, formatted];
+      setCustomProjectCategories(updated);
+      try {
+        localStorage.setItem("onset_custom_project_categories", JSON.stringify(updated));
+      } catch (err) {
+        console.warn("localStorage write failed:", err);
+      }
+    }
+
+    setProjectForm((prev) => ({ ...prev, category: formatted }));
+    setNewProjectCatInput("");
+    setIsAddingNewProjectCat(false);
+    showNotification(`Category "${formatted}" added and selected!`);
+  };
 
   // Upload States
   const [projectUploading, setProjectUploading] = useState(false);
@@ -687,7 +783,7 @@ export default function Admin() {
         {/* CATEGORY FILTER CHIPS */}
         <div className="mt-4 flex max-w-full gap-1.5 overflow-x-auto pb-1">
           {activeTab === "projects"
-            ? PROJECT_CATEGORIES.map((cat) => (
+            ? ["All", ...allProjectCategories].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setProjectFilterCategory(cat)}
@@ -700,7 +796,7 @@ export default function Admin() {
                   {cat}
                 </button>
               ))
-            : GALLERY_CATEGORIES.map((cat) => (
+            : ["All", ...allGalleryCategories].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setGalleryFilterCategory(cat)}
@@ -900,18 +996,85 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">
-                    Category *
-                  </label>
-                  <select
-                    value={projectForm.category}
-                    onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                  >
-                    {PROJECT_CATEGORIES.filter((c) => c !== "All").map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600">
+                      <Tag size={12} className="text-[#0066B4]" />
+                      <span>Category *</span>
+                    </label>
+                    {!isAddingNewProjectCat && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewProjectCat(true);
+                          setNewProjectCatInput("");
+                        }}
+                        className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2 py-0.5 text-[10px] font-semibold text-[#0066B4] transition hover:bg-[#0066B4] hover:text-white"
+                      >
+                        <Plus size={11} />
+                        <span>Add New</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Inline New Category Creation Input */}
+                  {isAddingNewProjectCat && (
+                    <div className="mb-2 flex items-center gap-1.5 rounded-xl border border-[#0066B4]/40 bg-[#EDF5FA]/80 p-1.5 shadow-sm">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={newProjectCatInput}
+                        onChange={(e) => setNewProjectCatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddProjectCategory();
+                          } else if (e.key === "Escape") {
+                            setIsAddingNewProjectCat(false);
+                          }
+                        }}
+                        placeholder="New category..."
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddProjectCategory}
+                        disabled={!newProjectCatInput.trim()}
+                        className="flex items-center gap-1 rounded-lg bg-[#0066B4] px-2.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F] disabled:opacity-50"
+                      >
+                        <Check size={11} />
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingNewProjectCat(false)}
+                        className="rounded-lg border border-slate-200 bg-white p-1 text-slate-500 hover:bg-slate-50"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Modern Pill Chips Selector */}
+                  <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-slate-200/80 bg-slate-50/60 p-2">
+                    {allProjectCategories.map((cat) => {
+                      const isSelected = projectForm.category === cat;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setProjectForm((prev) => ({ ...prev, category: cat }))}
+                          className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${
+                            isSelected
+                              ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
+                              : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
+                          }`}
+                        >
+                          {isSelected && <Check size={11} className="stroke-[2.5]" />}
+                          <span>{cat}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -1102,18 +1265,85 @@ export default function Admin() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">
-                  Category *
-                </label>
-                <select
-                  value={galleryForm.category}
-                  onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                >
-                  {GALLERY_CATEGORIES.filter((c) => c !== "All").map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                    <Tag size={13} className="text-[#0066B4]" />
+                    <span>Category *</span>
+                  </label>
+                  {!isAddingNewGalleryCat && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingNewGalleryCat(true);
+                        setNewGalleryCatInput("");
+                      }}
+                      className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2.5 py-1 text-[11px] font-semibold text-[#0066B4] shadow-sm transition hover:bg-[#0066B4] hover:text-white"
+                    >
+                      <Plus size={12} />
+                      <span>Add New Category</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Inline New Category Creation Input */}
+                {isAddingNewGalleryCat && (
+                  <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#0066B4]/40 bg-[#EDF5FA]/90 p-2 shadow-sm">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newGalleryCatInput}
+                      onChange={(e) => setNewGalleryCatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddGalleryCategory();
+                        } else if (e.key === "Escape") {
+                          setIsAddingNewGalleryCat(false);
+                        }
+                      }}
+                      placeholder="e.g. Architecture, Renovation, Highways..."
+                      className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddGalleryCategory}
+                      disabled={!newGalleryCatInput.trim()}
+                      className="flex items-center gap-1 rounded-lg bg-[#0066B4] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F] disabled:opacity-50"
+                    >
+                      <Check size={12} />
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewGalleryCat(false)}
+                      className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 hover:bg-slate-50"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Modern Pill Chips Selector */}
+                <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-2.5">
+                  {allGalleryCategories.map((cat) => {
+                    const isSelected = galleryForm.category === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setGalleryForm((prev) => ({ ...prev, category: cat }))}
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition ${
+                          isSelected
+                            ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
+                        }`}
+                      >
+                        {isSelected && <Check size={12} className="stroke-[2.5]" />}
+                        <span>{cat}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>

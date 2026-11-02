@@ -67,7 +67,7 @@ const galleryItems = [
   },
 ];
 
-const categories = [
+const defaultCategories = [
   "All",
   "Infrastructure",
   "Construction",
@@ -79,6 +79,17 @@ const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState(galleryItems);
+
+  // Dynamically compute all categories from default + live items
+  const categories = [
+    "All",
+    ...Array.from(
+      new Set([
+        ...defaultCategories.filter((c) => c !== "All"),
+        ...items.map((item) => item.category).filter(Boolean),
+      ])
+    ),
+  ];
 
   // Fetch live gallery from backend API and auto-refresh on focus/updates
   useEffect(() => {
