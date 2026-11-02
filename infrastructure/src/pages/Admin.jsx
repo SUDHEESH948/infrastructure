@@ -104,7 +104,7 @@ export default function Admin() {
     description: "",
     details: "",
     location: "Kerala",
-    image: "/projects/building-construction.jpg",
+    image: "",
     iconName: "Building2",
     deliverables: "",
     status: "Completed",
@@ -507,15 +507,20 @@ export default function Admin() {
 
   // Open Project Modal
   const openAddProjectModal = () => {
+    const maxNumericId = projects.reduce((max, p) => {
+      const num = parseInt(p.projectId || p.id, 10);
+      return !isNaN(num) ? Math.max(max, num) : max;
+    }, 0);
+
     setEditingProject(null);
     setProjectForm({
-      projectId: String(projects.length + 1).padStart(2, "0"),
+      projectId: String(maxNumericId + 1).padStart(2, "0"),
       title: "",
-      category: "Infrastructure",
+      category: allProjectCategories[0] || "Infrastructure",
       description: "",
       details: "",
       location: "Kerala",
-      image: "/projects/building-construction.jpg",
+      image: "",
       iconName: "Building2",
       deliverables: "",
       status: "Completed",
@@ -532,7 +537,7 @@ export default function Admin() {
       description: proj.description || "",
       details: proj.details || "",
       location: proj.location || "Kerala",
-      image: proj.image || "/projects/building-construction.jpg",
+      image: proj.image || "",
       iconName: proj.iconName || "Building2",
       deliverables: Array.isArray(proj.deliverables)
         ? proj.deliverables.join("\n")
@@ -553,6 +558,7 @@ export default function Admin() {
     try {
       const payload = {
         ...projectForm,
+        image: projectForm.image.trim() || "/projects/building-construction.jpg",
         deliverables: projectForm.deliverables
           ? projectForm.deliverables.split("\n").map((d) => d.trim()).filter(Boolean)
           : [],
@@ -1280,126 +1286,128 @@ export default function Admin() {
             </p>
 
             <form onSubmit={handleSaveProject} className="mt-5 space-y-3.5 sm:space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">
-                    Project Title *
+              {/* Project Title (Full Width) */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-600">
+                  Project Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={projectForm.title}
+                  onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
+                  placeholder="e.g. Kannur Multi-Speciality Complex"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
+                />
+              </div>
+
+              {/* Category Selection (Full Width) */}
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="flex items-center gap-1 text-xs font-semibold text-slate-600">
+                    <Tag size={12} className="text-[#0066B4]" />
+                    <span>Category *</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={projectForm.title}
-                    onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
-                    placeholder="e.g. Kannur Multi-Speciality Complex"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
-                  />
+                  {!isAddingNewProjectCat && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingNewProjectCat(true);
+                        setNewProjectCatInput("");
+                      }}
+                      className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2 py-0.5 text-[10px] font-semibold text-[#0066B4] transition hover:bg-[#0066B4] hover:text-white"
+                    >
+                      <Plus size={11} />
+                      <span>Add New</span>
+                    </button>
+                  )}
                 </div>
 
-                <div>
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600">
-                      <Tag size={12} className="text-[#0066B4]" />
-                      <span>Category *</span>
-                    </label>
-                    {!isAddingNewProjectCat && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAddingNewProjectCat(true);
-                          setNewProjectCatInput("");
-                        }}
-                        className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2 py-0.5 text-[10px] font-semibold text-[#0066B4] transition hover:bg-[#0066B4] hover:text-white"
-                      >
-                        <Plus size={11} />
-                        <span>Add New</span>
-                      </button>
-                    )}
+                {/* Inline New Category Creation Input */}
+                {isAddingNewProjectCat && (
+                  <div className="mb-2 flex items-center gap-1.5 rounded-xl border border-[#0066B4]/40 bg-[#EDF5FA]/80 p-1.5 shadow-sm">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newProjectCatInput}
+                      onChange={(e) => setNewProjectCatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddProjectCategory();
+                        } else if (e.key === "Escape") {
+                          setIsAddingNewProjectCat(false);
+                        }
+                      }}
+                      placeholder="New category..."
+                      className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddProjectCategory}
+                      disabled={!newProjectCatInput.trim()}
+                      className="flex items-center gap-1 rounded-lg bg-[#0066B4] px-2.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F] disabled:opacity-50"
+                    >
+                      <Check size={11} />
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewProjectCat(false)}
+                      className="rounded-lg border border-slate-200 bg-white p-1 text-slate-500 hover:bg-slate-50"
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
+                )}
 
-                  {/* Inline New Category Creation Input */}
-                  {isAddingNewProjectCat && (
-                    <div className="mb-2 flex items-center gap-1.5 rounded-xl border border-[#0066B4]/40 bg-[#EDF5FA]/80 p-1.5 shadow-sm">
-                      <input
-                        type="text"
-                        autoFocus
-                        value={newProjectCatInput}
-                        onChange={(e) => setNewProjectCatInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddProjectCategory();
-                          } else if (e.key === "Escape") {
-                            setIsAddingNewProjectCat(false);
-                          }
-                        }}
-                        placeholder="New category..."
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddProjectCategory}
-                        disabled={!newProjectCatInput.trim()}
-                        className="flex items-center gap-1 rounded-lg bg-[#0066B4] px-2.5 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F] disabled:opacity-50"
+                {/* Modern Pill Chips Selector with Remove Category Option for Custom Categories */}
+                <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50/60 p-2">
+                  {allProjectCategories.map((cat) => {
+                    const isSelected = projectForm.category === cat;
+                    const isCustom = !DEFAULT_PROJECT_CATS.includes(cat);
+                    return (
+                      <div
+                        key={cat}
+                        className={`group flex items-center rounded-lg transition ${
+                          isSelected
+                            ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
+                        }`}
                       >
-                        <Check size={11} />
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingNewProjectCat(false)}
-                        className="rounded-lg border border-slate-200 bg-white p-1 text-slate-500 hover:bg-slate-50"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Modern Pill Chips Selector with Remove Category Option */}
-                  <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-slate-200/80 bg-slate-50/60 p-2">
-                    {allProjectCategories.map((cat) => {
-                      const isSelected = projectForm.category === cat;
-                      return (
-                        <div
-                          key={cat}
-                          className={`group flex items-center rounded-lg transition ${
-                            isSelected
-                              ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
-                              : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => setProjectForm((prev) => ({ ...prev, category: cat }))}
+                          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium"
                         >
+                          {isSelected && <Check size={11} className="stroke-[2.5]" />}
+                          <span>{cat}</span>
+                        </button>
+
+                        {isCustom && (
                           <button
                             type="button"
-                            onClick={() => setProjectForm((prev) => ({ ...prev, category: cat }))}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveProjectCategory(cat);
+                            }}
+                            title={`Remove custom category "${cat}"`}
+                            className={`mr-1 flex h-3.5 w-3.5 items-center justify-center rounded-full transition ${
+                              isSelected
+                                ? "text-white/70 hover:bg-white/20 hover:text-white"
+                                : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                            }`}
                           >
-                            {isSelected && <Check size={11} className="stroke-[2.5]" />}
-                            <span>{cat}</span>
+                            <X size={10} />
                           </button>
-
-                          {allProjectCategories.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveProjectCategory(cat);
-                              }}
-                              title={`Remove category "${cat}"`}
-                              className={`mr-1 flex h-3.5 w-3.5 items-center justify-center rounded-full transition ${
-                                isSelected
-                                  ? "text-white/70 hover:bg-white/20 hover:text-white"
-                                  : "text-slate-400 hover:bg-red-50 hover:text-red-500"
-                              }`}
-                            >
-                              <X size={10} />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
+              {/* Location & Icon Theme (Balanced 2-column Grid) */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-600">
@@ -1630,10 +1638,11 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Modern Pill Chips Selector with Remove Category Option */}
+                {/* Modern Pill Chips Selector with Remove Category Option for Custom Categories */}
                 <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-2.5">
                   {allGalleryCategories.map((cat) => {
                     const isSelected = galleryForm.category === cat;
+                    const isCustom = !DEFAULT_GALLERY_CATS.includes(cat);
                     return (
                       <div
                         key={cat}
@@ -1652,14 +1661,14 @@ export default function Admin() {
                           <span>{cat}</span>
                         </button>
 
-                        {allGalleryCategories.length > 1 && (
+                        {isCustom && (
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveGalleryCategory(cat);
                             }}
-                            title={`Remove category "${cat}"`}
+                            title={`Remove custom category "${cat}"`}
                             className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
                               isSelected
                                 ? "text-white/70 hover:bg-white/20 hover:text-white"

@@ -112,13 +112,30 @@ export const createProject = async (req, res) => {
       });
     }
 
-    // Auto-generate next project ID if not provided
-    const projectId =
-      req.body.projectId ||
-      String(inMemoryProjects.length + 1).padStart(2, "0");
+    // Auto-generate next project ID safely without collision
+    let targetProjectId = req.body.projectId;
+
+    if (mongoose.connection.readyState === 1) {
+      if (!targetProjectId || (await Project.findOne({ projectId: targetProjectId }))) {
+        const allProj = await Project.find({}, "projectId");
+        const numbers = allProj
+          .map((p) => parseInt(p.projectId, 10))
+          .filter((n) => !isNaN(n));
+        const nextId = (numbers.length > 0 ? Math.max(...numbers) : 0) + 1;
+        targetProjectId = String(nextId).padStart(2, "0");
+      }
+    } else {
+      if (!targetProjectId || inMemoryProjects.some((p) => p.projectId === targetProjectId)) {
+        const numbers = inMemoryProjects
+          .map((p) => parseInt(p.projectId, 10))
+          .filter((n) => !isNaN(n));
+        const nextId = (numbers.length > 0 ? Math.max(...numbers) : 0) + 1;
+        targetProjectId = String(nextId).padStart(2, "0");
+      }
+    }
 
     const newProjectData = {
-      projectId,
+      projectId: targetProjectId,
       title,
       category: category || "Infrastructure",
       description,
@@ -137,14 +154,6 @@ export const createProject = async (req, res) => {
     };
 
     if (mongoose.connection.readyState === 1) {
-      const existing = await Project.findOne({ projectId });
-      if (existing) {
-        return res.status(400).json({
-          success: false,
-          message: `Project with ID ${projectId} already exists`,
-        });
-      }
-
       const project = await Project.create(newProjectData);
       inMemoryProjects.unshift(project.toObject());
       return res.status(201).json({ success: true, source: "database", data: project });
