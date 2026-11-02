@@ -37,6 +37,7 @@ import {
   uploadImageAPI,
   uploadMultipleImagesAPI,
 } from "../services/api";
+import logo from "../assets/logo/onsite infra.png";
 
 const PROJECT_CATEGORIES = [
   "All",
@@ -707,10 +708,14 @@ export default function Admin() {
         >
           {/* LOGO & TITLE */}
           <div className="text-center">
-            <div className="mx-auto flex h-13 w-13 items-center justify-center rounded-2xl bg-[#0066B4] text-white shadow-lg shadow-[#0066B4]/30 sm:h-14 sm:w-14">
-              <Lock size={24} className="sm:size-7" />
+            <div className="mx-auto mb-3 flex items-center justify-center">
+              <img
+                src={logo}
+                alt="Onset Infra"
+                className="h-12 w-auto object-contain sm:h-14"
+              />
             </div>
-            <h1 className="mt-4 font-serif text-2xl font-light text-[#071b2d] sm:text-3xl">
+            <h1 className="mt-2 font-serif text-2xl font-light text-[#071b2d] sm:text-3xl">
               Onset Infra Admin
             </h1>
             <p className="mt-1 text-xs text-slate-500">
@@ -922,27 +927,35 @@ export default function Admin() {
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-3 py-3 sm:px-6 sm:py-3.5">
           {/* BRAND */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0066B4] font-bold text-white shadow-sm sm:h-10 sm:w-10">
-              OI
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold tracking-wider text-slate-900 sm:text-base">
-                  ONSET INFRA
-                </span>
-                <span className="rounded-full bg-[#0066B4]/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#0066B4]">
-                  Admin
-                </span>
-              </div>
-              <p className="hidden text-[10px] uppercase tracking-widest text-slate-400 xs:block">
-                Engineers & Interior Designers
-              </p>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="group flex items-center gap-2.5 transition hover:opacity-90"
+              title="Onset Infra (Click to visit website)"
+            >
+              <img
+                src={logo}
+                alt="Onset Infra Logo"
+                className="h-8 w-auto object-contain sm:h-9 md:h-10"
+              />
+            </Link>
+            <span className="rounded-full bg-[#0066B4]/10 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[#0066B4]">
+              Admin Portal
+            </span>
           </div>
 
           {/* RIGHT ACTION BUTTONS */}
           <div className="flex items-center gap-2">
+            <Link
+              to="/"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-[#0066B4] hover:text-[#0066B4]"
+              title="Open public website in new tab"
+            >
+              <ExternalLink size={13} />
+              <span className="hidden sm:inline">View Site</span>
+            </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 active:scale-95"
