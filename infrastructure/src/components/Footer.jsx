@@ -69,15 +69,6 @@ const Footer = () => {
     return () => observer.disconnect();
   }, []);
 
-  const navLinks = [
-    { label: "Home", to: "/" },
-    { label: "Services", to: "/services" },
-    { label: "Projects", to: "/projects" },
-    { label: "About", to: "/about" },
-    { label: "Contact", to: "/contact" },
-    { label: "Admin Portal", to: "/admin" },
-  ];
-
   return (
     <>
       {/* 
@@ -114,39 +105,7 @@ const Footer = () => {
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-black/55 via-black/20 to-transparent z-0" />
 
         {/* ========================================================
-            1. TOP ROW: COPYRIGHT ON LEFT, NAVIGATION ON RIGHT
-        ======================================================== */}
-        <div className="relative z-10 flex flex-col justify-between gap-3 border-b border-white/15 pb-4 pt-6 text-xs text-white/80 sm:flex-row sm:items-center sm:pb-5 sm:pt-7">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-white/70">
-              &copy; {new Date().getFullYear()} ONSET INFRA
-            </span>
-            <span className="hidden h-3 w-px bg-white/20 sm:inline-block" />
-            <span className="hidden text-[11px] uppercase tracking-widest text-white/60 sm:inline-block">
-              Engineers &bull; Interior Designers
-            </span>
-          </div>
-
-          <nav
-            className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7"
-            aria-label="Footer Quick Navigation"
-          >
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={scrollToTop}
-                className="group relative inline-flex items-center text-xs font-medium text-white/80 transition-colors duration-200 hover:text-white"
-              >
-                <span>{link.label}</span>
-                <span className="absolute -bottom-0.5 left-0 h-[1.5px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full" />
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        {/* ========================================================
-            2. MIDDLE ROW: EDITORIAL STATEMENT & CONTACT DETAILS
+            1. MIDDLE ROW: EDITORIAL STATEMENT & CONTACT DETAILS
         ======================================================== */}
         <motion.div
           variants={middleFadeVariants}
