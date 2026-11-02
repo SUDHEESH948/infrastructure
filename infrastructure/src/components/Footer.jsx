@@ -106,78 +106,59 @@ const Footer = () => {
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-black/55 via-black/20 to-transparent z-0" />
 
         {/* ========================================================
-            1. MIDDLE ROW: 3-COLUMN EDITORIAL, CENTER LOGO & CONTACT/SOCIAL
+            1. MIDDLE SECTION: EDITORIAL STATEMENT, LOGO & SOCIAL MEDIA
+               FOLLOWED BY DEDICATED PHONE & LOCATION ROW (ON THE SAME LINE)
         ======================================================== */}
         <motion.div
           variants={middleFadeVariants}
           initial="hidden"
           animate={isRevealed ? "visible" : "hidden"}
-          className="relative z-10 my-auto grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-10 items-center py-4"
+          className="relative z-10 my-auto flex flex-col justify-between gap-6 sm:gap-8 py-3"
         >
-          {/* LEFT COLUMN: EDITORIAL HEADLINE & PHONE NUMBER */}
-          <div className="md:col-span-5 flex flex-col justify-center gap-4">
-            <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl">
-              Engineers and
-              <br />
-              <span className="font-sans font-normal text-cyan-100">
-                interior designers.
-              </span>
-            </h2>
-            <p className="max-w-md text-xs font-light leading-relaxed text-white/80 sm:text-sm">
-              Building &amp; road contracting, bespoke interior design, modular
-              kitchens, statutory permits, Airport NOC, precision GPS surveying,
-              and 3D architectural visualization.
-            </p>
-
-            {/* PHONE CHIP UNDERNEATH */}
-            <div className="pt-2">
-              <a
-                href="tel:+917559034444"
-                className="group inline-flex items-center gap-3.5 transition-colors hover:text-cyan-100"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:bg-white group-hover:text-[#0066B4] shadow-md border border-white/15">
-                  <Phone size={17} />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-white/50">
-                    Phone
-                  </span>
-                  <span className="text-sm font-semibold text-white sm:text-base">
-                    +91 75590 34444
-                  </span>
-                </div>
-              </a>
+          {/* TOP ROW: 3 COLUMNS (EDITORIAL, LOGO, SOCIAL MEDIA) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-center">
+            {/* LEFT COLUMN: EDITORIAL STATEMENT */}
+            <div className="md:col-span-5 flex flex-col justify-center gap-3 sm:gap-4">
+              <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl">
+                Engineers and
+                <br />
+                <span className="font-sans font-normal text-cyan-100">
+                  interior designers.
+                </span>
+              </h2>
+              <p className="max-w-md text-xs font-light leading-relaxed text-white/80 sm:text-sm">
+                Building &amp; road contracting, bespoke interior design, modular
+                kitchens, statutory permits, Airport NOC, precision GPS surveying,
+                and 3D architectural visualization.
+              </p>
             </div>
-          </div>
 
-          {/* CENTER COLUMN: OFFICIAL COMPANY LOGO CENTERPIECE */}
-          <div className="md:col-span-3 flex items-center justify-center py-2">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.88, y: 15 }}
-              animate={
-                isRevealed
-                  ? { opacity: 1, scale: 1, y: 0 }
-                  : { opacity: 0, scale: 0.88, y: 15 }
-              }
-              transition={{
-                duration: 0.6,
-                delay: 0.1,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="group relative inline-flex items-center justify-center rounded-3xl bg-white px-6 py-4 sm:px-7 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 shadow-2xl ring-1 ring-white/50 transition-all duration-300 hover:scale-105 hover:shadow-cyan-400/20"
-            >
-              <img
-                src={logo}
-                alt="ONSET INFRA"
-                className="h-12 sm:h-14 md:h-16 lg:h-20 max-w-[220px] sm:max-w-[250px] md:max-w-[270px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
-              />
-            </motion.div>
-          </div>
+            {/* CENTER COLUMN: OFFICIAL COMPANY LOGO CENTERPIECE */}
+            <div className="md:col-span-3 flex items-center justify-center py-2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.88, y: 15 }}
+                animate={
+                  isRevealed
+                    ? { opacity: 1, scale: 1, y: 0 }
+                    : { opacity: 0, scale: 0.88, y: 15 }
+                }
+                transition={{
+                  duration: 0.6,
+                  delay: 0.1,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="group relative inline-flex items-center justify-center rounded-3xl bg-white px-6 py-4 sm:px-7 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 shadow-2xl ring-1 ring-white/50 transition-all duration-300 hover:scale-105 hover:shadow-cyan-400/20"
+              >
+                <img
+                  src={logo}
+                  alt="ONSET INFRA"
+                  className="h-12 sm:h-14 md:h-16 lg:h-20 max-w-[220px] sm:max-w-[250px] md:max-w-[270px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              </motion.div>
+            </div>
 
-          {/* RIGHT COLUMN: SOCIAL MEDIA ICONS & LOCATION CHIP */}
-          <div className="md:col-span-4 flex flex-col items-start md:items-end justify-center gap-6">
-            {/* SOCIAL MEDIA ICONS ROW */}
-            <div className="flex flex-col items-start md:items-end gap-2.5">
+            {/* RIGHT COLUMN: SOCIAL MEDIA ICONS */}
+            <div className="md:col-span-4 flex flex-col items-start md:items-end justify-center gap-2.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">
                 Social Media
               </span>
@@ -235,13 +216,34 @@ const Footer = () => {
                 </a>
               </div>
             </div>
+          </div>
 
-            {/* LOCATION CHIP UNDERNEATH */}
+          {/* BOTTOM ROW: PHONE NUMBER & LOCATION IN THE EXACT SAME HORIZONTAL LINE */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-3 sm:pt-4 border-t border-white/10">
+            {/* PHONE CHIP */}
+            <a
+              href="tel:+917559034444"
+              className="group inline-flex items-center gap-3.5 transition-colors hover:text-cyan-100"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:bg-white group-hover:text-[#0066B4] shadow-md border border-white/15">
+                <Phone size={17} />
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-white/50">
+                  Phone
+                </span>
+                <span className="text-sm font-semibold text-white sm:text-base">
+                  +91 75590 34444
+                </span>
+              </div>
+            </a>
+
+            {/* LOCATION CHIP */}
             <div className="group flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm border border-white/15 shadow-md">
                 <MapPin size={17} />
               </div>
-              <div className="text-left md:text-right">
+              <div className="text-left sm:text-right">
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-white/50">
                   Location
                 </span>
