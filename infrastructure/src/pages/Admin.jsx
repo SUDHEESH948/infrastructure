@@ -1268,9 +1268,11 @@ export default function Admin() {
                           <video
                             src={item.image}
                             className="h-full w-full object-cover"
+                            autoPlay
                             muted
+                            loop
                             playsInline
-                            preload="metadata"
+                            preload="auto"
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
@@ -1798,9 +1800,11 @@ export default function Admin() {
                                   <video
                                     src={img.url}
                                     className="h-full w-full object-cover"
+                                    autoPlay
                                     muted
+                                    loop
                                     playsInline
-                                    preload="metadata"
+                                    preload="auto"
                                   />
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                                     <Film size={18} className="text-white" />

@@ -265,15 +265,11 @@ const Gallery = () => {
                         <video
                           src={item.image}
                           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+                          autoPlay
                           muted
                           loop
                           playsInline
-                          preload="metadata"
-                          onMouseEnter={(e) => e.target.play().catch(() => {})}
-                          onMouseLeave={(e) => {
-                            e.target.pause();
-                            e.target.currentTime = 0;
-                          }}
+                          preload="auto"
                         />
                         <div className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0066B4] shadow-md backdrop-blur-md">
                           <Play size={13} className="fill-[#0066B4] ml-0.5" />
@@ -301,7 +297,7 @@ const Gallery = () => {
 
                     {/* TOP BADGE / NUMBER */}
                     <div className="absolute left-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-xs font-semibold text-[#0066B4] shadow-md backdrop-blur-md">
-                      {item.id}
+                      {String(index + 1).padStart(2, "0")}
                     </div>
 
                     {/* BOTTOM CONTENT OVERLAY */}
@@ -434,7 +430,11 @@ const Gallery = () => {
                     </div>
 
                     <span className="font-mono text-xs font-semibold text-slate-400">
-                      {selectedImage.id}
+                      {String(
+                        filteredItems.findIndex(
+                          (i) => (i.id || i.galleryId) === (selectedImage.id || selectedImage.galleryId)
+                        ) + 1 || 1
+                      ).padStart(2, "0")}
                     </span>
                   </div>
                 </motion.div>

@@ -35,6 +35,14 @@ const imageMap = {
   "06": valuationProjectImg,
 };
 
+const isVideoUrl = (url) => {
+  if (!url || typeof url !== "string") return false;
+  return (
+    url.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i) !== null ||
+    url.startsWith("data:video/")
+  );
+};
+
 const defaultProjects = [
   {
     id: "01",
@@ -292,7 +300,7 @@ const OurProjects = () => {
             className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
           >
             <AnimatePresence mode="popLayout">
-              {filteredProjects.map((project) => {
+              {filteredProjects.map((project, index) => {
                 const Icon = project.icon;
 
                 return (
@@ -331,28 +339,47 @@ const OurProjects = () => {
                       xs:rounded-[28px]
                     "
                   >
-                    {/* IMAGE */}
+                    {/* IMAGE / VIDEO */}
 
                     <div className="relative h-[180px] overflow-hidden bg-[#EAF2F7] xs:h-[220px] sm:h-[260px]">
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        className="
-                          h-full
-                          w-full
-                          object-cover
-                          transition-transform
-                          duration-700
-                          group-hover:scale-110
-                        "
-                      />
+                      {isVideoUrl(project.image) ? (
+                        <video
+                          src={project.image}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          preload="auto"
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                            transition-transform
+                            duration-700
+                            group-hover:scale-110
+                          "
+                        />
+                      ) : (
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                            transition-transform
+                            duration-700
+                            group-hover:scale-110
+                          "
+                        />
+                      )}
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0066B4]/70 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0066B4]/70 via-transparent to-transparent pointer-events-none" />
 
                       {/* NUMBER */}
 
                       <div className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[11px] font-semibold text-[#0066B4] shadow-lg backdrop-blur-md xs:left-5 xs:top-5 xs:h-10 xs:w-10 xs:text-xs">
-                        {project.id}
+                        {String(index + 1).padStart(2, "0")}
                       </div>
 
                       {/* ICON */}
@@ -551,14 +578,24 @@ const OurProjects = () => {
                 <X size={17} className="xs:size-[19px]" />
               </button>
 
-              {/* MODAL IMAGE */}
+              {/* MODAL IMAGE / VIDEO */}
 
-              <div className="h-[200px] overflow-hidden xs:h-[240px] md:h-[360px]">
-                <img
-                  src={selectedProject.image}
-                  alt={selectedProject.title}
-                  className="h-full w-full object-cover"
-                />
+              <div className="h-[200px] overflow-hidden xs:h-[240px] md:h-[360px] bg-black flex items-center justify-center">
+                {isVideoUrl(selectedProject.image) ? (
+                  <video
+                    src={selectedProject.image}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <img
+                    src={selectedProject.image}
+                    alt={selectedProject.title}
+                    className="h-full w-full object-cover"
+                  />
+                )}
               </div>
 
               {/* MODAL CONTENT */}

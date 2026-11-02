@@ -30,6 +30,14 @@ const presetImageMap = {
   "/projects/estimation-valuation.jpg": valuationProjectImg,
 };
 
+const isVideoUrl = (url) => {
+  if (!url || typeof url !== "string") return false;
+  return (
+    url.match(/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i) !== null ||
+    url.startsWith("data:video/")
+  );
+};
+
 const defaultProjects = [
   {
     id: "01",
@@ -171,20 +179,32 @@ export default function Projects() {
               onMouseEnter={() => setActiveItem(item)}
               className="group relative flex cursor-pointer flex-col border-t border-[#0066B4]/20 pb-6 pt-5 transition-all duration-300 hover:border-[#0066B4]"
             >
-              {/* IMAGE */}
+              {/* IMAGE / VIDEO */}
               <div className="relative mb-5 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#EAF2F7] shadow-[0_10px_35px_rgba(0,102,180,0.06)]">
-                <img
-                  src={imgSrc}
-                  alt={item.title}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = buildingProjectImg;
-                  }}
-                  className="h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-[#0066B4]/10 transition-opacity duration-300 group-hover:opacity-0" />
+                {isVideoUrl(imgSrc) ? (
+                  <video
+                    src={imgSrc}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    className="h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
+                  />
+                ) : (
+                  <img
+                    src={imgSrc}
+                    alt={item.title}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = buildingProjectImg;
+                    }}
+                    className="h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute inset-0 bg-[#0066B4]/10 transition-opacity duration-300 group-hover:opacity-0 pointer-events-none" />
                 <div className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-[11px] font-semibold text-[#0066B4] shadow-lg backdrop-blur-md">
-                  {String(item.id || idx + 1).padStart(2, "0")}
+                  {String(idx + 1).padStart(2, "0")}
                 </div>
                 <div className="absolute bottom-4 right-4 flex h-10 w-10 translate-y-3 items-center justify-center rounded-full bg-[#0066B4] text-white opacity-0 shadow-xl transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                   <span className="text-lg">↗</span>
