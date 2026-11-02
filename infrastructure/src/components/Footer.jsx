@@ -1,38 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, MapPin, ArrowUpRight } from "lucide-react";
+import { Phone, MapPin } from "lucide-react";
 
 // Individual letters for staggered reveal of ONSET INFRA
 const wordOnset = ["O", "N", "S", "E", "T"];
 const wordInfra = ["I", "N", "F", "R", "A"];
-
-// Framer motion variants
-const brandContainerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.12,
-    },
-  },
-};
-
-const letterVariants = {
-  hidden: {
-    opacity: 0,
-    y: 60,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.65,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
 
 const middleFadeVariants = {
   hidden: { opacity: 0, y: 25 },
@@ -123,7 +96,7 @@ const Footer = () => {
       {/* 
         CINEMATIC FOOTER LAYER:
         Modeled after the reference layout with top metadata strip,
-        modern editorial headline, contact chips, and giant ONSET INFRA typography.
+        modern editorial headline, contact chips, and bottom ONSET INFRA typography.
       */}
       <footer
         id="footer"
@@ -178,7 +151,7 @@ const Footer = () => {
           animate={isRevealed ? "visible" : "hidden"}
           className="relative z-10 my-auto flex flex-col justify-between gap-8 py-4 lg:flex-row lg:items-end"
         >
-          {/* EDITORIAL HEADLINE (Modeled after "Effortless modern vehicle repair") */}
+          {/* EDITORIAL HEADLINE */}
           <div className="max-w-2xl">
             <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl">
               Engineers and
@@ -232,41 +205,79 @@ const Footer = () => {
         </motion.div>
 
         {/* ========================================================
-            3. BOTTOM ROW: GIANT "ONSET INFRA" TYPOGRAPHY (Modeled after Kinetic>)
+            3. BOTTOM ROW: LOGO FIRST, THEN ONSET INFRA LETTER BY LETTER
         ======================================================== */}
-        <div className="relative z-10 w-full overflow-hidden pb-1 select-none sm:pb-2">
-          <motion.div
-            variants={brandContainerVariants}
-            initial="hidden"
-            animate={isRevealed ? "visible" : "hidden"}
-            className="flex w-full items-baseline justify-between font-sans font-black uppercase tracking-tighter text-white"
-          >
-            {/* WORD 1: ONSET */}
-            <div className="flex">
-              {wordOnset.map((char, i) => (
-                <motion.span
-                  key={`onset-${i}`}
-                  variants={letterVariants}
-                  className="inline-block transform-gpu text-[14.5vw] leading-[0.84] drop-shadow-lg"
-                >
-                  {char}
-                </motion.span>
-              ))}
-            </div>
+        <div className="relative z-10 w-full overflow-hidden pb-2 sm:pb-4 select-none">
+          <div className="flex items-center gap-3 sm:gap-5 md:gap-7">
+            {/* 1. FIRST: THE WHITE OI LOGO */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6, y: 35 }}
+              animate={
+                isRevealed
+                  ? { opacity: 1, scale: 1, y: 0 }
+                  : { opacity: 0, scale: 0.6, y: 35 }
+              }
+              transition={{
+                duration: 0.55,
+                delay: 0.12,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-xl ring-2 ring-white/30 sm:h-16 sm:w-16 sm:rounded-2xl md:h-20 md:w-20 md:rounded-3xl lg:h-24 lg:w-24"
+            >
+              <span className="text-lg font-black tracking-tight text-[#0066B4] sm:text-2xl md:text-3xl lg:text-4xl">
+                OI
+              </span>
+            </motion.div>
 
-            {/* WORD 2: INFRA */}
-            <div className="flex text-cyan-100">
-              {wordInfra.map((char, i) => (
-                <motion.span
-                  key={`infra-${i}`}
-                  variants={letterVariants}
-                  className="inline-block transform-gpu text-[14.5vw] leading-[0.84] drop-shadow-lg"
-                >
-                  {char}
-                </motion.span>
-              ))}
+            {/* 2. THEN: ONSET INFRA LETTERS COMING ONE BY ONE */}
+            <div className="flex flex-nowrap items-baseline gap-2 sm:gap-4 font-sans font-black uppercase tracking-tight text-white">
+              {/* WORD 1: ONSET */}
+              <div className="flex">
+                {wordOnset.map((char, i) => (
+                  <motion.span
+                    key={`onset-${i}`}
+                    initial={{ opacity: 0, y: 50, scale: 0.92 }}
+                    animate={
+                      isRevealed
+                        ? { opacity: 1, y: 0, scale: 1 }
+                        : { opacity: 0, y: 50, scale: 0.92 }
+                    }
+                    transition={{
+                      duration: 0.5,
+                      delay: 0.28 + i * 0.07,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="inline-block transform-gpu text-[10.5vw] sm:text-[10vw] md:text-[9.5vw] lg:text-[9vw] leading-[0.85] drop-shadow-lg"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </div>
+
+              {/* WORD 2: INFRA */}
+              <div className="flex text-cyan-100">
+                {wordInfra.map((char, i) => (
+                  <motion.span
+                    key={`infra-${i}`}
+                    initial={{ opacity: 0, y: 50, scale: 0.92 }}
+                    animate={
+                      isRevealed
+                        ? { opacity: 1, y: 0, scale: 1 }
+                        : { opacity: 0, y: 50, scale: 0.92 }
+                    }
+                    transition={{
+                      duration: 0.5,
+                      delay: 0.28 + (wordOnset.length + i) * 0.07,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="inline-block transform-gpu text-[10.5vw] sm:text-[10vw] md:text-[9.5vw] lg:text-[9vw] leading-[0.85] drop-shadow-lg"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </footer>
     </>
