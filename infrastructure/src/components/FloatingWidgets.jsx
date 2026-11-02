@@ -1,65 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronUp } from "lucide-react";
+import React from "react";
+import { motion } from "framer-motion";
 
 const FloatingWidgets = () => {
-  const { pathname } = useLocation();
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  // Auto scroll to top on every route change
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, [pathname]);
-
-  // Show scroll-to-top button when user scrolls down
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
   const whatsappUrl =
     "https://wa.me/917559034444?text=Hello%20ONSET%20INFRA,%20I%20would%20like%20to%20inquire%20about%20your%20services.";
 
   return (
-    <div className="fixed bottom-5 right-5 sm:bottom-7 sm:right-7 z-50 flex flex-col items-center gap-3">
-      {/* SCROLL TO TOP BUTTON (Appears smoothly when scrolled past 300px) */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            key="scroll-top-btn"
-            initial={{ opacity: 0, scale: 0.7, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.7, y: 15 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            onClick={scrollToTop}
-            aria-label="Scroll to top"
-            className="group relative flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-[#0066B4] text-white shadow-xl shadow-[#0066B4]/30 ring-1 ring-white/20 transition-all duration-300 hover:bg-[#005291] hover:-translate-y-1 hover:shadow-2xl active:scale-95"
-          >
-            <ChevronUp size={20} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
-            <span className="pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-xl bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 hidden sm:inline-block">
-              Scroll to top
-            </span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* FLOATING WHATSAPP BUTTON (Always visible with subtle pulse) */}
+    <div className="fixed bottom-5 right-5 sm:bottom-7 sm:right-7 z-50">
+      {/* FLOATING WHATSAPP BUTTON */}
       <motion.a
         href={whatsappUrl}
         target="_blank"
@@ -67,7 +15,7 @@ const FloatingWidgets = () => {
         aria-label="Chat on WhatsApp"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
         className="group relative flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-[#25D366]/40 transition-all duration-300 hover:scale-110 hover:bg-[#20ba59] active:scale-95"
       >
         {/* Ambient pulse ring */}
