@@ -115,54 +115,54 @@ const Footer = () => {
           animate={isRevealed ? "visible" : "hidden"}
           className="relative z-10 my-auto flex flex-col justify-between gap-6 sm:gap-8 py-3"
         >
-          {/* TOP ROW: 3 COLUMNS (EDITORIAL, LOGO, SOCIAL MEDIA) */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-center">
+          {/* TOP ROW: 2 BALANCED COLUMNS (EDITORIAL ON LEFT, LOGO & SOCIAL MEDIA ON RIGHT) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             {/* LEFT COLUMN: EDITORIAL STATEMENT */}
-            <div className="md:col-span-5 flex flex-col justify-center gap-3 sm:gap-4">
-              <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl">
+            <div className="md:col-span-7 lg:col-span-7 flex flex-col justify-center gap-3 sm:gap-4 max-w-2xl">
+              <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
                 Engineers and
                 <br />
                 <span className="font-sans font-normal text-cyan-100">
                   interior designers.
                 </span>
               </h2>
-              <p className="max-w-md text-xs font-light leading-relaxed text-white/80 sm:text-sm">
+              <p className="max-w-xl text-xs font-light leading-relaxed text-white/80 sm:text-sm">
                 Building &amp; road contracting, bespoke interior design, modular
                 kitchens, statutory permits, Airport NOC, precision GPS surveying,
                 and 3D architectural visualization.
               </p>
             </div>
 
-            {/* CENTER COLUMN: OFFICIAL COMPANY LOGO CENTERPIECE */}
-            <div className="md:col-span-3 flex items-center justify-center py-2">
+            {/* RIGHT COLUMN: OFFICIAL COMPANY LOGO & SOCIAL MEDIA ICONS */}
+            <div className="md:col-span-5 lg:col-span-5 flex flex-col items-start md:items-end justify-center gap-4 sm:gap-5">
+              {/* OFFICIAL COMPANY LOGO */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.88, y: 15 }}
+                initial={{ opacity: 0, scale: 0.9, y: 15 }}
                 animate={
                   isRevealed
                     ? { opacity: 1, scale: 1, y: 0 }
-                    : { opacity: 0, scale: 0.88, y: 15 }
+                    : { opacity: 0, scale: 0.9, y: 15 }
                 }
                 transition={{
-                  duration: 0.6,
-                  delay: 0.1,
+                  duration: 0.55,
+                  delay: 0.08,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="group relative inline-flex items-center justify-center rounded-3xl bg-white px-6 py-4 sm:px-7 sm:py-5 md:px-6 md:py-5 lg:px-8 lg:py-6 shadow-2xl ring-1 ring-white/50 transition-all duration-300 hover:scale-105 hover:shadow-cyan-400/20"
+                className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 sm:px-6 sm:py-3.5 shadow-xl ring-1 ring-white/40 transition-transform duration-300 hover:scale-105"
               >
                 <img
                   src={logo}
                   alt="ONSET INFRA"
-                  className="h-12 sm:h-14 md:h-16 lg:h-20 max-w-[220px] sm:max-w-[250px] md:max-w-[270px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                  className="h-11 sm:h-13 md:h-14 lg:h-16 w-auto object-contain"
                 />
               </motion.div>
-            </div>
 
-            {/* RIGHT COLUMN: SOCIAL MEDIA ICONS */}
-            <div className="md:col-span-4 flex flex-col items-start md:items-end justify-center gap-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">
-                Social Media
-              </span>
-              <div className="flex items-center gap-2.5 sm:gap-3">
+              {/* SOCIAL MEDIA ICONS */}
+              <div className="flex flex-col items-start md:items-end gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">
+                  Social Media
+                </span>
+                <div className="flex items-center gap-2.5 sm:gap-3">
                 {/* Instagram */}
                 <a
                   href="https://instagram.com"
@@ -217,6 +217,7 @@ const Footer = () => {
               </div>
             </div>
           </div>
+        </div>
 
           {/* BOTTOM ROW: PHONE NUMBER & LOCATION IN THE EXACT SAME HORIZONTAL LINE */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-3 sm:pt-4 border-t border-white/10">
