@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
+import FloatingWidgets from "./components/FloatingWidgets";
 
 import Home from "./pages/Home";
 import Contact from "./pages/Contact";
@@ -34,8 +35,9 @@ function AppContent() {
         </Routes>
       </main>
 
-      {/* Hide public footer on Admin routes */}
+      {/* Hide public footer and floating widgets on Admin routes */}
       {!isAdmin && <Footer />}
+      {!isAdmin && <FloatingWidgets />}
     </div>
   );
 }
