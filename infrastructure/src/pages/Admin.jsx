@@ -622,7 +622,7 @@ export default function Admin() {
           </div>
 
           {/* STATS TILES */}
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
             <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-3.5 sm:p-4">
               <div className="flex items-center justify-between text-slate-500">
                 <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
@@ -647,19 +647,6 @@ export default function Admin() {
                 {galleryItems.length}
               </p>
               <span className="text-[10px] text-slate-400">Home visual archive</span>
-            </div>
-
-            <div className="col-span-2 rounded-2xl border border-slate-100 bg-[#F8FAFC] p-3.5 sm:col-span-1 sm:p-4">
-              <div className="flex items-center justify-between text-slate-500">
-                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
-                  API & Database
-                </span>
-                <Sparkles size={16} className="text-emerald-500" />
-              </div>
-              <p className="mt-1 text-xs font-bold text-emerald-600 sm:text-sm">
-                Connected & Ready
-              </p>
-              <span className="text-[10px] text-slate-400">Synced across frontend</span>
             </div>
           </div>
         </div>

@@ -1,7 +1,15 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
+import dns from "node:dns";
 import { fileURLToPath } from "url";
+
+// Set reliable public DNS servers to resolve MongoDB Atlas SRV records smoothly on Windows
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch {
+  // Fall back to system DNS
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
