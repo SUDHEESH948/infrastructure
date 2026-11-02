@@ -1,34 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, MapPin } from "lucide-react";
+import { Phone, MapPin, ArrowUpRight } from "lucide-react";
 
-// Individual letters for staggered reveal
+// Individual letters for staggered reveal of ONSET INFRA
 const wordOnset = ["O", "N", "S", "E", "T"];
 const wordInfra = ["I", "N", "F", "R", "A"];
 
-// Animation variants
-const logoVariants = {
-  hidden: { opacity: 0, scale: 0.65, y: 15 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      duration: 0.55,
-      delay: 0.1,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
-
+// Framer motion variants
 const brandContainerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.045,
-      delayChildren: 0.2,
+      staggerChildren: 0.04,
+      delayChildren: 0.12,
     },
   },
 };
@@ -36,77 +22,27 @@ const brandContainerVariants = {
 const letterVariants = {
   hidden: {
     opacity: 0,
-    y: 18,
+    y: 60,
   },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.45,
+      duration: 0.65,
       ease: [0.16, 1, 0.3, 1],
     },
   },
 };
 
-const subtitleVariants = {
-  hidden: { opacity: 0, y: 10 },
+const middleFadeVariants = {
+  hidden: { opacity: 0, y: 25 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5,
-      delay: 0.65,
+      duration: 0.7,
+      delay: 0.05,
       ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
-
-const descriptionVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.55,
-      delay: 0.75,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
-
-const phoneVariants = {
-  hidden: { opacity: 0, x: 20 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.55,
-      delay: 0.85,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
-
-const locationVariants = {
-  hidden: { opacity: 0, x: 20 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.55,
-      delay: 0.95,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
-
-const bottomStripVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.6,
-      delay: 1.05,
     },
   },
 };
@@ -117,7 +53,11 @@ const Footer = () => {
   const [footerHeight, setFooterHeight] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
 
-  // Measure dynamic footer height for the natural document flow spacer
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Measure dynamic footer height for the natural document spacer
   useEffect(() => {
     const updateHeight = () => {
       if (footerRef.current) {
@@ -136,7 +76,7 @@ const Footer = () => {
     };
   }, []);
 
-  // Trigger branding animation when footer scrolls into view
+  // IntersectionObserver to trigger animations when the user scrolls near the footer
   useEffect(() => {
     if (!spacerRef.current) return;
 
@@ -156,6 +96,15 @@ const Footer = () => {
     return () => observer.disconnect();
   }, []);
 
+  const navLinks = [
+    { label: "Home", to: "/" },
+    { label: "Services", to: "/services" },
+    { label: "Projects", to: "/projects" },
+    { label: "About", to: "/about" },
+    { label: "Contact", to: "/contact" },
+    { label: "Admin Portal", to: "/admin" },
+  ];
+
   return (
     <>
       {/* 
@@ -166,15 +115,15 @@ const Footer = () => {
       */}
       <div
         ref={spacerRef}
-        style={{ height: footerHeight ? `${footerHeight}px` : "auto" }}
+        style={{ height: footerHeight ? `${footerHeight}px` : "80vh" }}
         className="w-full pointer-events-none -z-10"
         aria-hidden="true"
       />
 
       {/* 
-        FIXED CINEMATIC FOOTER LAYER:
-        Stationed at the bottom of the viewport behind main content (z-0).
-        Remains hidden until the main content is scrolled upward.
+        CINEMATIC FOOTER LAYER:
+        Modeled after the reference layout with top metadata strip,
+        modern editorial headline, contact chips, and giant ONSET INFRA typography.
       */}
       <footer
         id="footer"
@@ -182,149 +131,149 @@ const Footer = () => {
         style={{
           pointerEvents: isRevealed ? "auto" : "none",
         }}
-        className="fixed bottom-0 left-0 right-0 w-full z-0 overflow-hidden bg-[#0066B4] text-white"
+        className="fixed bottom-0 left-0 right-0 w-full z-0 h-[82vh] min-h-[580px] max-h-[820px] bg-gradient-to-b from-[#005ea8] via-[#0066B4] to-[#004780] text-white flex flex-col justify-between overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16"
       >
-        {/* SUBTLE CIRCULAR DECORATIVE OUTLINE */}
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full border border-white/10" />
+        {/* SUBTLE AMBIENT LIGHTING OVERLAYS */}
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-white/[0.04] blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-cyan-400/[0.05] blur-3xl" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-5 py-10 md:px-10 md:py-12">
-          {/* COMPACT MAIN ROW */}
-          <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
-            {/* BRAND */}
-            <div>
-              <div className="flex items-center gap-3">
-                {/* 1. ANIMATED WHITE OI LOGO IN ROUNDED SQUARE */}
-                <motion.div
-                  variants={logoVariants}
-                  initial="hidden"
-                  animate={isRevealed ? "visible" : "hidden"}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white font-bold text-[#0066B4] shadow-md ring-1 ring-white/30 sm:h-12 sm:w-12"
-                >
-                  <span className="text-base font-extrabold tracking-tight text-[#0066B4] sm:text-lg">
-                    OI
-                  </span>
-                </motion.div>
-
-                <div>
-                  {/* 2. ONSET INFRA STAGGERED LETTER ANIMATION */}
-                  <motion.h2
-                    variants={brandContainerVariants}
-                    initial="hidden"
-                    animate={isRevealed ? "visible" : "hidden"}
-                    className="flex items-center text-lg font-bold tracking-wider text-white select-none sm:text-xl"
-                  >
-                    <span className="mr-2 flex">
-                      {wordOnset.map((char, i) => (
-                        <motion.span
-                          key={`onset-${i}`}
-                          variants={letterVariants}
-                          className="inline-block transform-gpu"
-                        >
-                          {char}
-                        </motion.span>
-                      ))}
-                    </span>
-                    <span className="flex">
-                      {wordInfra.map((char, i) => (
-                        <motion.span
-                          key={`infra-${i}`}
-                          variants={letterVariants}
-                          className="inline-block transform-gpu"
-                        >
-                          {char}
-                        </motion.span>
-                      ))}
-                    </span>
-                  </motion.h2>
-
-                  {/* 3. ENGINEERS AND INTERIOR DESIGNERS SUBTITLE */}
-                  <motion.p
-                    variants={subtitleVariants}
-                    initial="hidden"
-                    animate={isRevealed ? "visible" : "hidden"}
-                    className="text-[10px] uppercase tracking-widest text-white/70"
-                  >
-                    Engineers and Interior Designers
-                  </motion.p>
-                </div>
-              </div>
-
-              {/* 4. COMPANY DESCRIPTION */}
-              <motion.p
-                variants={descriptionVariants}
-                initial="hidden"
-                animate={isRevealed ? "visible" : "hidden"}
-                className="mt-3 max-w-sm text-xs leading-5 text-white/80"
-              >
-                Building &amp; road contractors, interior designers, modular
-                kitchens, statutory permits, Airport NOC, GPS surveying,
-                renovation, and 3D visualization.
-              </motion.p>
-            </div>
-
-            {/* CONTACT INFO (INLINE) */}
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
-              {/* PHONE */}
-              <motion.a
-                variants={phoneVariants}
-                initial="hidden"
-                animate={isRevealed ? "visible" : "hidden"}
-                href="tel:+917559034444"
-                className="group flex items-center gap-3 transition-colors hover:text-white"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white transition-colors group-hover:bg-white group-hover:text-[#0066B4]">
-                  <Phone size={14} />
-                </div>
-                <div>
-                  <span className="block text-[9px] uppercase tracking-wider text-white/50">
-                    Phone
-                  </span>
-                  <span className="text-xs font-medium text-white">
-                    +91 75590 34444
-                  </span>
-                </div>
-              </motion.a>
-
-              {/* LOCATION */}
-              <motion.div
-                variants={locationVariants}
-                initial="hidden"
-                animate={isRevealed ? "visible" : "hidden"}
-                className="flex items-center gap-3"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
-                  <MapPin size={14} />
-                </div>
-                <div>
-                  <span className="block text-[9px] uppercase tracking-wider text-white/50">
-                    Location
-                  </span>
-                  <span className="text-xs text-white/80">
-                    Puthiyatheru, Kannur - 670011
-                  </span>
-                </div>
-              </motion.div>
-            </div>
+        {/* ========================================================
+            1. TOP ROW: COPYRIGHT ON LEFT, NAVIGATION ON RIGHT
+        ======================================================== */}
+        <div className="relative z-10 flex flex-col justify-between gap-3 border-b border-white/15 pb-4 pt-6 text-xs text-white/80 sm:flex-row sm:items-center sm:pb-5 sm:pt-7">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-white/70">
+              &copy; {new Date().getFullYear()} ONSET INFRA
+            </span>
+            <span className="hidden h-3 w-px bg-white/20 sm:inline-block" />
+            <span className="hidden text-[11px] uppercase tracking-widest text-white/60 sm:inline-block">
+              Engineers &bull; Interior Designers
+            </span>
           </div>
 
-          {/* BOTTOM STRIP */}
+          <nav
+            className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7"
+            aria-label="Footer Quick Navigation"
+          >
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={scrollToTop}
+                className="group relative inline-flex items-center text-xs font-medium text-white/80 transition-colors duration-200 hover:text-white"
+              >
+                <span>{link.label}</span>
+                <span className="absolute -bottom-0.5 left-0 h-[1.5px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full" />
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* ========================================================
+            2. MIDDLE ROW: EDITORIAL STATEMENT & CONTACT DETAILS
+        ======================================================== */}
+        <motion.div
+          variants={middleFadeVariants}
+          initial="hidden"
+          animate={isRevealed ? "visible" : "hidden"}
+          className="relative z-10 my-auto flex flex-col justify-between gap-8 py-4 lg:flex-row lg:items-end"
+        >
+          {/* EDITORIAL HEADLINE (Modeled after "Effortless modern vehicle repair") */}
+          <div className="max-w-2xl">
+            <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-5xl md:text-6xl">
+              Engineers and
+              <br />
+              <span className="font-sans font-normal text-cyan-100">
+                interior designers.
+              </span>
+            </h2>
+            <p className="mt-3.5 max-w-lg text-xs font-light leading-relaxed text-white/80 sm:text-sm">
+              Building &amp; road contracting, bespoke interior design, modular
+              kitchens, statutory permits, Airport NOC, precision GPS surveying,
+              and 3D architectural visualization.
+            </p>
+          </div>
+
+          {/* CONTACT & LOCATION CHIPS */}
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-8 lg:flex-col lg:items-end lg:gap-4">
+            {/* PHONE CHIP */}
+            <a
+              href="tel:+917559034444"
+              className="group flex items-center gap-3 transition-colors hover:text-cyan-100"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:bg-white group-hover:text-[#0066B4]">
+                <Phone size={15} />
+              </div>
+              <div>
+                <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">
+                  Phone
+                </span>
+                <span className="text-xs font-semibold text-white sm:text-sm">
+                  +91 75590 34444
+                </span>
+              </div>
+            </a>
+
+            {/* LOCATION CHIP */}
+            <div className="group flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-sm">
+                <MapPin size={15} />
+              </div>
+              <div>
+                <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">
+                  Location
+                </span>
+                <span className="text-xs text-white/80 sm:text-sm">
+                  Puthiyatheru, Kannur - 670011
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ========================================================
+            3. BOTTOM ROW: GIANT "ONSET INFRA" TYPOGRAPHY (Modeled after Kinetic>)
+        ======================================================== */}
+        <div className="relative z-10 w-full overflow-hidden pb-1 select-none sm:pb-2">
           <motion.div
-            variants={bottomStripVariants}
+            variants={brandContainerVariants}
             initial="hidden"
             animate={isRevealed ? "visible" : "hidden"}
-            className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-5 text-xs sm:flex-row"
+            className="flex w-full items-baseline justify-between font-sans font-black uppercase tracking-tighter text-white"
           >
-            <p className="text-[10px] uppercase tracking-widest text-white/50">
-              &copy; {new Date().getFullYear()} ONSET INFRA &bull; Engineers and
-              Interior Designers. All rights reserved.
-            </p>
+            {/* WORD 1: ONSET */}
+            <div className="flex">
+              {wordOnset.map((char, i) => (
+                <motion.span
+                  key={`onset-${i}`}
+                  variants={letterVariants}
+                  className="inline-block transform-gpu text-[13.5vw] leading-[0.84] drop-shadow-lg"
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </div>
 
-            <Link
-              to="/admin"
-              className="text-[11px] font-medium text-white/50 transition-colors hover:text-white"
+            {/* SEPARATOR / ARROW EMBLEM */}
+            <motion.span
+              variants={letterVariants}
+              className="inline-block transform-gpu text-[11vw] font-light leading-[0.84] text-cyan-200/80 px-1 sm:px-2"
             >
-              Admin Portal
-            </Link>
+              /
+            </motion.span>
+
+            {/* WORD 2: INFRA */}
+            <div className="flex text-cyan-100">
+              {wordInfra.map((char, i) => (
+                <motion.span
+                  key={`infra-${i}`}
+                  variants={letterVariants}
+                  className="inline-block transform-gpu text-[13.5vw] leading-[0.84] drop-shadow-lg"
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </div>
           </motion.div>
         </div>
       </footer>
