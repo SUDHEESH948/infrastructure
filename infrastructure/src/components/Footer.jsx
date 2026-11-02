@@ -159,10 +159,9 @@ const Footer = () => {
                         key={link.to}
                         to={link.to}
                         onClick={scrollToTop}
-                        className="group inline-flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm font-medium text-white/80 transition-all duration-200 hover:text-cyan-200 hover:translate-x-1"
+                        className="text-[11px] sm:text-xs md:text-sm font-medium text-white/80 transition-all duration-200 hover:text-cyan-200 hover:translate-x-1"
                       >
-                        <span className="h-1 w-1 rounded-full bg-cyan-300/60 transition-transform group-hover:scale-150 group-hover:bg-cyan-200" />
-                        <span>{link.label}</span>
+                        {link.label}
                       </Link>
                     ))}
                   </nav>
