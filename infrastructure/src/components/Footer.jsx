@@ -21,6 +21,15 @@ const middleFadeVariants = {
   },
 };
 
+const navLinks = [
+  { label: "Home", to: "/" },
+  { label: "Services", to: "/services" },
+  { label: "Projects", to: "/projects" },
+  { label: "About", to: "/about" },
+  { label: "Contact", to: "/contact" },
+  { label: "Admin Portal", to: "/admin" },
+];
+
 const Footer = () => {
   const footerRef = useRef(null);
   const spacerRef = useRef(null);
@@ -115,19 +124,19 @@ const Footer = () => {
           animate={isRevealed ? "visible" : "hidden"}
           className="relative z-10 my-auto flex flex-col justify-between gap-6 sm:gap-8 py-3"
         >
-          {/* TOP ROW: 2 BALANCED COLUMNS (EDITORIAL ON LEFT, LOGO & SOCIAL MEDIA ON RIGHT) */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          {/* TOP ROW: 3 COLUMNS (EDITORIAL CONTAINER, NAVIGATION, LOGO & SOCIAL MEDIA) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-center">
             {/* LEFT COLUMN: EDITORIAL STATEMENT AS A CONTAINER */}
-            <div className="md:col-span-7 lg:col-span-7 max-w-2xl">
-              <div className="rounded-3xl bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.04] backdrop-blur-md border border-white/20 p-5 sm:p-7 md:p-8 shadow-2xl ring-1 ring-white/10 flex flex-col justify-center gap-3 sm:gap-4 transition-all duration-300 hover:border-white/30 hover:from-white/[0.15]">
-                <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl">
+            <div className="md:col-span-5 lg:col-span-5">
+              <div className="rounded-3xl bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.04] backdrop-blur-md border border-white/20 p-5 sm:p-6 shadow-2xl ring-1 ring-white/10 flex flex-col justify-center gap-2.5 sm:gap-3 transition-all duration-300 hover:border-white/30 hover:from-white/[0.15]">
+                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-light leading-[1.08] tracking-tight text-white">
                   Engineers and
                   <br />
                   <span className="font-sans font-normal text-cyan-100">
                     interior designers.
                   </span>
                 </h2>
-                <p className="max-w-xl text-xs font-light leading-relaxed text-white/80 sm:text-sm">
+                <p className="text-[11px] sm:text-xs font-light leading-relaxed text-white/80">
                   Building &amp; road contracting, bespoke interior design, modular
                   kitchens, statutory permits, Airport NOC, precision GPS surveying,
                   and 3D architectural visualization.
@@ -135,8 +144,30 @@ const Footer = () => {
               </div>
             </div>
 
+            {/* CENTER COLUMN: NAVIGATION LINKS */}
+            <div className="md:col-span-3 lg:col-span-3 flex flex-col items-start md:items-center justify-center">
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white/50">
+                  Navigation
+                </span>
+                <nav className="flex flex-col gap-1.5 sm:gap-2" aria-label="Footer Quick Navigation">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={scrollToTop}
+                      className="group inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-white/80 transition-all duration-200 hover:text-cyan-200 hover:translate-x-1"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-cyan-300/60 transition-transform group-hover:scale-150 group-hover:bg-cyan-200" />
+                      <span>{link.label}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            </div>
+
             {/* RIGHT COLUMN: OFFICIAL COMPANY LOGO & SOCIAL MEDIA ICONS */}
-            <div className="md:col-span-5 lg:col-span-5 flex flex-col items-start md:items-end justify-center gap-4 sm:gap-5">
+            <div className="md:col-span-4 lg:col-span-4 flex flex-col items-start md:items-end justify-center gap-3.5 sm:gap-4">
               {/* OFFICIAL COMPANY LOGO */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 15 }}
