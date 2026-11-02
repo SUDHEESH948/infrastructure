@@ -295,11 +295,6 @@ const Gallery = () => {
                     {/* DUAL GRADIENT OVERLAY */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#071b2d]/85 via-[#0066B4]/20 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-95 pointer-events-none" />
 
-                    {/* TOP BADGE / NUMBER */}
-                    <div className="absolute left-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-xs font-semibold text-[#0066B4] shadow-md backdrop-blur-md">
-                      {String(index + 1).padStart(2, "0")}
-                    </div>
-
                     {/* BOTTOM CONTENT OVERLAY */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white pointer-events-none">
                       <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#7fc1f2]">
@@ -428,14 +423,6 @@ const Gallery = () => {
                         {selectedImage.title}
                       </h3>
                     </div>
-
-                    <span className="font-mono text-xs font-semibold text-slate-400">
-                      {String(
-                        filteredItems.findIndex(
-                          (i) => (i.id || i.galleryId) === (selectedImage.id || selectedImage.galleryId)
-                        ) + 1 || 1
-                      ).padStart(2, "0")}
-                    </span>
                   </div>
                 </motion.div>
               </motion.div>
