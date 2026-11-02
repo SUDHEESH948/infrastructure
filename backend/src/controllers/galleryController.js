@@ -74,11 +74,13 @@ export const createGalleryItem = async (req, res) => {
       }
 
       const timestamp = Date.now();
+      const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url);
       const formattedItems = validItems.map((it, idx) => ({
         galleryId: it.galleryId || `gal_${timestamp}_${idx}`,
-        title: it.title || req.body.title || `Gallery Image ${idx + 1}`,
+        title: it.title || req.body.title || `Gallery Item ${idx + 1}`,
         category: it.category || req.body.category || "Infrastructure",
         image: it.image,
+        mediaType: it.mediaType || (isVideoUrl(it.image) ? "video" : "image"),
       }));
 
       if (mongoose.connection.readyState === 1) {
@@ -111,6 +113,8 @@ export const createGalleryItem = async (req, res) => {
     }
 
     const galleryId = req.body.galleryId || `gal_${Date.now()}`;
+    const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url);
+    const mediaType = req.body.mediaType || (isVideoUrl(image) ? "video" : "image");
 
     if (mongoose.connection.readyState === 1) {
       const item = await Gallery.create({
@@ -118,6 +122,7 @@ export const createGalleryItem = async (req, res) => {
         title,
         category: category || "Infrastructure",
         image,
+        mediaType,
       });
       // Also update in-memory cache
       inMemoryGallery.unshift({
@@ -125,6 +130,7 @@ export const createGalleryItem = async (req, res) => {
         title: item.title,
         category: item.category,
         image: item.image,
+        mediaType,
       });
       return res.status(201).json({ success: true, source: "database", data: item });
     }
@@ -135,6 +141,7 @@ export const createGalleryItem = async (req, res) => {
       title,
       category: category || "Infrastructure",
       image,
+      mediaType,
       createdAt: new Date().toISOString(),
     };
     inMemoryGallery.unshift(newItem);

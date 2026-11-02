@@ -21,7 +21,12 @@ const gallerySchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: [true, "Image URL is required"],
+      required: [true, "Media URL is required"],
+    },
+    mediaType: {
+      type: String,
+      enum: ["image", "video"],
+      default: "image",
     },
   },
   {

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowUpRight } from "lucide-react";
+import { X, ArrowUpRight, Play, Film } from "lucide-react";
 import { fetchGalleryFromAPI } from "../services/api";
+
+const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url || "");
 
 /* =========================================================
    GALLERY ITEMS (Different High-Res Project Images)
@@ -102,6 +104,7 @@ const Gallery = () => {
           category: item.category,
           title: item.title,
           image: item.image,
+          mediaType: item.mediaType || (isVideoUrl(item.image) ? "video" : "image"),
         }));
         setItems(formatted);
       }
@@ -256,24 +259,45 @@ const Gallery = () => {
                   "
                   onClick={() => setSelectedImage(item)}
                 >
-                  <div className="relative h-full w-full overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      loading="lazy"
-                      className="
-                        h-full
-                        w-full
-                        object-cover
-                        transition-transform
-                        duration-700
-                        ease-out
-                        group-hover:scale-108
-                      "
-                    />
+                  <div className="relative h-full w-full overflow-hidden bg-slate-900">
+                    {isVideoUrl(item.image) || item.mediaType === "video" ? (
+                      <div className="relative h-full w-full">
+                        <video
+                          src={item.image}
+                          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                          onMouseEnter={(e) => e.target.play().catch(() => {})}
+                          onMouseLeave={(e) => {
+                            e.target.pause();
+                            e.target.currentTime = 0;
+                          }}
+                        />
+                        <div className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#0066B4] shadow-md backdrop-blur-md">
+                          <Play size={13} className="fill-[#0066B4] ml-0.5" />
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        loading="lazy"
+                        className="
+                          h-full
+                          w-full
+                          object-cover
+                          transition-transform
+                          duration-700
+                          ease-out
+                          group-hover:scale-108
+                        "
+                      />
+                    )}
 
                     {/* DUAL GRADIENT OVERLAY */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#071b2d]/85 via-[#0066B4]/20 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-95" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#071b2d]/85 via-[#0066B4]/20 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-95 pointer-events-none" />
 
                     {/* TOP BADGE / NUMBER */}
                     <div className="absolute left-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-xs font-semibold text-[#0066B4] shadow-md backdrop-blur-md">
@@ -281,7 +305,7 @@ const Gallery = () => {
                     </div>
 
                     {/* BOTTOM CONTENT OVERLAY */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white pointer-events-none">
                       <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#7fc1f2]">
                         {item.category}
                       </span>
@@ -291,7 +315,7 @@ const Gallery = () => {
                       </h3>
 
                       <div className="mt-4 flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-white/80 transition-colors group-hover:text-white">
-                        <span>View Image</span>
+                        <span>{isVideoUrl(item.image) || item.mediaType === "video" ? "Watch Video" : "View Image"}</span>
                         <ArrowUpRight
                           size={15}
                           className="
@@ -382,11 +406,21 @@ const Gallery = () => {
                   </button>
 
                   <div className="flex max-h-[72vh] w-full items-center justify-center overflow-hidden bg-[#0c1a24]">
-                    <img
-                      src={selectedImage.image}
-                      alt={selectedImage.title}
-                      className="max-h-[72vh] w-full object-contain"
-                    />
+                    {isVideoUrl(selectedImage.image) || selectedImage.mediaType === "video" ? (
+                      <video
+                        src={selectedImage.image}
+                        controls
+                        autoPlay
+                        playsInline
+                        className="max-h-[72vh] w-full object-contain"
+                      />
+                    ) : (
+                      <img
+                        src={selectedImage.image}
+                        alt={selectedImage.title}
+                        className="max-h-[72vh] w-full object-contain"
+                      />
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between gap-4 p-5 md:px-7 md:py-5">
