@@ -96,7 +96,7 @@ const Footer = () => {
         style={{
           pointerEvents: isRevealed ? "auto" : "none",
         }}
-        className="fixed bottom-0 left-0 right-0 w-full z-0 h-[84vh] min-h-[600px] max-h-[840px] bg-gradient-to-b from-[#005ea8] via-[#0066B4] to-[#003866] text-white flex flex-col justify-between overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16 shadow-[inset_0_-50px_90px_rgba(0,0,0,0.5)]"
+        className="fixed bottom-0 left-0 right-0 w-full z-0 h-[86vh] min-h-[620px] max-h-[860px] bg-gradient-to-b from-[#005ea8] via-[#0066B4] to-[#003866] text-white flex flex-col justify-between overflow-hidden px-5 sm:px-8 md:px-12 lg:px-16 shadow-[inset_0_-50px_90px_rgba(0,0,0,0.5)]"
       >
         {/* SUBTLE AMBIENT LIGHTING OVERLAYS */}
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-white/[0.04] blur-3xl" />
@@ -117,20 +117,22 @@ const Footer = () => {
         >
           {/* TOP ROW: 2 BALANCED COLUMNS (EDITORIAL ON LEFT, LOGO & SOCIAL MEDIA ON RIGHT) */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            {/* LEFT COLUMN: EDITORIAL STATEMENT */}
-            <div className="md:col-span-7 lg:col-span-7 flex flex-col justify-center gap-3 sm:gap-4 max-w-2xl">
-              <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-                Engineers and
-                <br />
-                <span className="font-sans font-normal text-cyan-100">
-                  interior designers.
-                </span>
-              </h2>
-              <p className="max-w-xl text-xs font-light leading-relaxed text-white/80 sm:text-sm">
-                Building &amp; road contracting, bespoke interior design, modular
-                kitchens, statutory permits, Airport NOC, precision GPS surveying,
-                and 3D architectural visualization.
-              </p>
+            {/* LEFT COLUMN: EDITORIAL STATEMENT AS A CONTAINER */}
+            <div className="md:col-span-7 lg:col-span-7 max-w-2xl">
+              <div className="rounded-3xl bg-gradient-to-br from-white/[0.12] via-white/[0.08] to-white/[0.04] backdrop-blur-md border border-white/20 p-5 sm:p-7 md:p-8 shadow-2xl ring-1 ring-white/10 flex flex-col justify-center gap-3 sm:gap-4 transition-all duration-300 hover:border-white/30 hover:from-white/[0.15]">
+                <h2 className="font-serif text-3xl font-light leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl">
+                  Engineers and
+                  <br />
+                  <span className="font-sans font-normal text-cyan-100">
+                    interior designers.
+                  </span>
+                </h2>
+                <p className="max-w-xl text-xs font-light leading-relaxed text-white/80 sm:text-sm">
+                  Building &amp; road contracting, bespoke interior design, modular
+                  kitchens, statutory permits, Airport NOC, precision GPS surveying,
+                  and 3D architectural visualization.
+                </p>
+              </div>
             </div>
 
             {/* RIGHT COLUMN: OFFICIAL COMPANY LOGO & SOCIAL MEDIA ICONS */}
