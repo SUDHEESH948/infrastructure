@@ -117,22 +117,64 @@ export default function Admin() {
     image: "",
   });
 
-  // Custom Categories State with localStorage Persistence
-  const [customProjectCategories, setCustomProjectCategories] = useState(() => {
+  // Default Category Definitions
+  const DEFAULT_GALLERY_CATS = [
+    "Infrastructure",
+    "Construction",
+    "Surveying",
+    "Project Management",
+  ];
+
+  const DEFAULT_PROJECT_CATS = [
+    "Infrastructure",
+    "Construction",
+    "Surveying",
+    "Project Management",
+    "Consultancy",
+    "Interiors",
+  ];
+
+  // Removed Categories tracking (Persisted so removed categories never resurrect)
+  const [removedGalleryCats, setRemovedGalleryCats] = useState(() => {
     try {
-      const saved = localStorage.getItem("onset_custom_project_categories");
+      const saved = localStorage.getItem("onset_removed_gallery_cats");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  const [customGalleryCategories, setCustomGalleryCategories] = useState(() => {
+  const [removedProjectCats, setRemovedProjectCats] = useState(() => {
     try {
-      const saved = localStorage.getItem("onset_custom_gallery_categories");
+      const saved = localStorage.getItem("onset_removed_project_cats");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
+    }
+  });
+
+  // Active Category Lists (Persisted in localStorage)
+  const [galleryCategoriesList, setGalleryCategoriesList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("onset_gallery_categories_list");
+      if (saved) return JSON.parse(saved);
+      const oldCustom = localStorage.getItem("onset_custom_gallery_categories");
+      const extras = oldCustom ? JSON.parse(oldCustom) : [];
+      return Array.from(new Set([...DEFAULT_GALLERY_CATS, ...extras]));
+    } catch {
+      return DEFAULT_GALLERY_CATS;
+    }
+  });
+
+  const [projectCategoriesList, setProjectCategoriesList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("onset_project_categories_list");
+      if (saved) return JSON.parse(saved);
+      const oldCustom = localStorage.getItem("onset_custom_project_categories");
+      const extras = oldCustom ? JSON.parse(oldCustom) : [];
+      return Array.from(new Set([...DEFAULT_PROJECT_CATS, ...extras]));
+    } catch {
+      return DEFAULT_PROJECT_CATS;
     }
   });
 
@@ -142,22 +184,20 @@ export default function Admin() {
   const [isAddingNewProjectCat, setIsAddingNewProjectCat] = useState(false);
   const [newProjectCatInput, setNewProjectCatInput] = useState("");
 
-  // Dynamically compute all categories from defaults + custom + live data
+  // Dynamically compute all categories, excluding any removed ones
   const allGalleryCategories = Array.from(
     new Set([
-      ...GALLERY_CATEGORIES.filter((c) => c !== "All"),
-      ...customGalleryCategories,
+      ...galleryCategoriesList,
       ...galleryItems.map((item) => item.category).filter(Boolean),
     ])
-  );
+  ).filter((cat) => !removedGalleryCats.includes(cat));
 
   const allProjectCategories = Array.from(
     new Set([
-      ...PROJECT_CATEGORIES.filter((c) => c !== "All"),
-      ...customProjectCategories,
+      ...projectCategoriesList,
       ...projects.map((p) => p.category).filter(Boolean),
     ])
-  );
+  ).filter((cat) => !removedProjectCats.includes(cat));
 
   const handleAddGalleryCategory = (e) => {
     if (e) e.preventDefault();
@@ -169,20 +209,64 @@ export default function Admin() {
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
 
-    if (!customGalleryCategories.includes(formatted)) {
-      const updated = [...customGalleryCategories, formatted];
-      setCustomGalleryCategories(updated);
-      try {
-        localStorage.setItem("onset_custom_gallery_categories", JSON.stringify(updated));
-      } catch (err) {
-        console.warn("localStorage write failed:", err);
-      }
+    const updated = Array.from(new Set([...galleryCategoriesList, formatted]));
+    setGalleryCategoriesList(updated);
+
+    const updatedRemoved = removedGalleryCats.filter((c) => c !== formatted);
+    setRemovedGalleryCats(updatedRemoved);
+
+    try {
+      localStorage.setItem("onset_gallery_categories_list", JSON.stringify(updated));
+      localStorage.setItem("onset_removed_gallery_cats", JSON.stringify(updatedRemoved));
+    } catch (err) {
+      console.warn("localStorage write failed:", err);
     }
 
     setGalleryForm((prev) => ({ ...prev, category: formatted }));
     setNewGalleryCatInput("");
     setIsAddingNewGalleryCat(false);
     showNotification(`Category "${formatted}" added and selected!`);
+  };
+
+  const handleRemoveGalleryCategory = (catToRemove) => {
+    if (allGalleryCategories.length <= 1) {
+      showNotification("At least one category must remain", "error");
+      return;
+    }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: "Remove Category",
+      message: `Are you sure you want to remove the category "${catToRemove}"?`,
+      confirmText: "Remove Category",
+      isDanger: true,
+      onConfirm: () => {
+        const updated = galleryCategoriesList.filter((c) => c !== catToRemove);
+        setGalleryCategoriesList(updated);
+
+        const newRemoved = Array.from(new Set([...removedGalleryCats, catToRemove]));
+        setRemovedGalleryCats(newRemoved);
+
+        try {
+          localStorage.setItem("onset_gallery_categories_list", JSON.stringify(updated));
+          localStorage.setItem("onset_removed_gallery_cats", JSON.stringify(newRemoved));
+          localStorage.removeItem("onset_custom_gallery_categories");
+        } catch (err) {
+          console.warn("localStorage write failed:", err);
+        }
+
+        if (galleryForm.category === catToRemove) {
+          const remaining = allGalleryCategories.filter((c) => c !== catToRemove);
+          setGalleryForm((prev) => ({
+            ...prev,
+            category: remaining[0] || "Infrastructure",
+          }));
+        }
+
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        showNotification(`Category "${catToRemove}" removed!`);
+      },
+    });
   };
 
   const handleAddProjectCategory = (e) => {
@@ -195,20 +279,64 @@ export default function Admin() {
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
 
-    if (!customProjectCategories.includes(formatted)) {
-      const updated = [...customProjectCategories, formatted];
-      setCustomProjectCategories(updated);
-      try {
-        localStorage.setItem("onset_custom_project_categories", JSON.stringify(updated));
-      } catch (err) {
-        console.warn("localStorage write failed:", err);
-      }
+    const updated = Array.from(new Set([...projectCategoriesList, formatted]));
+    setProjectCategoriesList(updated);
+
+    const updatedRemoved = removedProjectCats.filter((c) => c !== formatted);
+    setRemovedProjectCats(updatedRemoved);
+
+    try {
+      localStorage.setItem("onset_project_categories_list", JSON.stringify(updated));
+      localStorage.setItem("onset_removed_project_cats", JSON.stringify(updatedRemoved));
+    } catch (err) {
+      console.warn("localStorage write failed:", err);
     }
 
     setProjectForm((prev) => ({ ...prev, category: formatted }));
     setNewProjectCatInput("");
     setIsAddingNewProjectCat(false);
     showNotification(`Category "${formatted}" added and selected!`);
+  };
+
+  const handleRemoveProjectCategory = (catToRemove) => {
+    if (allProjectCategories.length <= 1) {
+      showNotification("At least one category must remain", "error");
+      return;
+    }
+
+    setConfirmDialog({
+      isOpen: true,
+      title: "Remove Category",
+      message: `Are you sure you want to remove the category "${catToRemove}"?`,
+      confirmText: "Remove Category",
+      isDanger: true,
+      onConfirm: () => {
+        const updated = projectCategoriesList.filter((c) => c !== catToRemove);
+        setProjectCategoriesList(updated);
+
+        const newRemoved = Array.from(new Set([...removedProjectCats, catToRemove]));
+        setRemovedProjectCats(newRemoved);
+
+        try {
+          localStorage.setItem("onset_project_categories_list", JSON.stringify(updated));
+          localStorage.setItem("onset_removed_project_cats", JSON.stringify(newRemoved));
+          localStorage.removeItem("onset_custom_project_categories");
+        } catch (err) {
+          console.warn("localStorage write failed:", err);
+        }
+
+        if (projectForm.category === catToRemove) {
+          const remaining = allProjectCategories.filter((c) => c !== catToRemove);
+          setProjectForm((prev) => ({
+            ...prev,
+            category: remaining[0] || "Infrastructure",
+          }));
+        }
+
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        showNotification(`Category "${catToRemove}" removed!`);
+      },
+    });
   };
 
   // Upload States
@@ -1165,24 +1293,46 @@ export default function Admin() {
                     </div>
                   )}
 
-                  {/* Modern Pill Chips Selector */}
+                  {/* Modern Pill Chips Selector with Remove Category Option */}
                   <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-slate-200/80 bg-slate-50/60 p-2">
                     {allProjectCategories.map((cat) => {
                       const isSelected = projectForm.category === cat;
                       return (
-                        <button
+                        <div
                           key={cat}
-                          type="button"
-                          onClick={() => setProjectForm((prev) => ({ ...prev, category: cat }))}
-                          className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${
+                          className={`group flex items-center rounded-lg transition ${
                             isSelected
                               ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
                               : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
                           }`}
                         >
-                          {isSelected && <Check size={11} className="stroke-[2.5]" />}
-                          <span>{cat}</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => setProjectForm((prev) => ({ ...prev, category: cat }))}
+                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium"
+                          >
+                            {isSelected && <Check size={11} className="stroke-[2.5]" />}
+                            <span>{cat}</span>
+                          </button>
+
+                          {allProjectCategories.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveProjectCategory(cat);
+                              }}
+                              title={`Remove category "${cat}"`}
+                              className={`mr-1 flex h-3.5 w-3.5 items-center justify-center rounded-full transition ${
+                                isSelected
+                                  ? "text-white/70 hover:bg-white/20 hover:text-white"
+                                  : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                              }`}
+                            >
+                              <X size={10} />
+                            </button>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -1434,24 +1584,46 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Modern Pill Chips Selector */}
+                {/* Modern Pill Chips Selector with Remove Category Option */}
                 <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-2.5">
                   {allGalleryCategories.map((cat) => {
                     const isSelected = galleryForm.category === cat;
                     return (
-                      <button
+                      <div
                         key={cat}
-                        type="button"
-                        onClick={() => setGalleryForm((prev) => ({ ...prev, category: cat }))}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition ${
+                        className={`group flex items-center rounded-xl transition ${
                           isSelected
                             ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
                             : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
                         }`}
                       >
-                        {isSelected && <Check size={12} className="stroke-[2.5]" />}
-                        <span>{cat}</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setGalleryForm((prev) => ({ ...prev, category: cat }))}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium"
+                        >
+                          {isSelected && <Check size={12} className="stroke-[2.5]" />}
+                          <span>{cat}</span>
+                        </button>
+
+                        {allGalleryCategories.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveGalleryCategory(cat);
+                            }}
+                            title={`Remove category "${cat}"`}
+                            className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
+                              isSelected
+                                ? "text-white/70 hover:bg-white/20 hover:text-white"
+                                : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                            }`}
+                          >
+                            <X size={11} />
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
