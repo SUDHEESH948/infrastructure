@@ -356,6 +356,30 @@ export default function Admin() {
     });
   };
 
+  const handleRestoreDefaultGalleryCategories = () => {
+    setRemovedGalleryCats([]);
+    setGalleryCategoriesList(DEFAULT_GALLERY_CATS);
+    try {
+      localStorage.removeItem("onset_removed_gallery_cats");
+      localStorage.setItem("onset_gallery_categories_list", JSON.stringify(DEFAULT_GALLERY_CATS));
+    } catch (err) {
+      console.warn("localStorage write failed:", err);
+    }
+    showNotification("Default gallery categories restored!");
+  };
+
+  const handleRestoreDefaultProjectCategories = () => {
+    setRemovedProjectCats([]);
+    setProjectCategoriesList(DEFAULT_PROJECT_CATS);
+    try {
+      localStorage.removeItem("onset_removed_project_cats");
+      localStorage.setItem("onset_project_categories_list", JSON.stringify(DEFAULT_PROJECT_CATS));
+    } catch (err) {
+      console.warn("localStorage write failed:", err);
+    }
+    showNotification("Default project categories restored!");
+  };
+
   // Upload States
   const [projectUploading, setProjectUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
@@ -1444,19 +1468,32 @@ export default function Admin() {
                     <Tag size={12} className="text-[#0066B4]" />
                     <span>Category *</span>
                   </label>
-                  {!isAddingNewProjectCat && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingNewProjectCat(true);
-                        setNewProjectCatInput("");
-                      }}
-                      className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2 py-0.5 text-[10px] font-semibold text-[#0066B4] transition hover:bg-[#0066B4] hover:text-white"
-                    >
-                      <Plus size={11} />
-                      <span>Add New</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {removedProjectCats.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRestoreDefaultProjectCategories}
+                        className="flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600 transition hover:bg-slate-50"
+                        title="Restore default project categories"
+                      >
+                        <RefreshCw size={10} />
+                        <span>Restore Defaults</span>
+                      </button>
+                    )}
+                    {!isAddingNewProjectCat && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewProjectCat(true);
+                          setNewProjectCatInput("");
+                        }}
+                        className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2 py-0.5 text-[10px] font-semibold text-[#0066B4] transition hover:bg-[#0066B4] hover:text-white"
+                      >
+                        <Plus size={11} />
+                        <span>Add New</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Inline New Category Creation Input */}
@@ -1497,11 +1534,10 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Modern Pill Chips Selector with Remove Category Option for Custom Categories */}
+                {/* Modern Pill Chips Selector with Remove Category Option for All Categories */}
                 <div className="flex flex-wrap gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50/60 p-2">
                   {allProjectCategories.map((cat) => {
                     const isSelected = projectForm.category === cat;
-                    const isCustom = !DEFAULT_PROJECT_CATS.includes(cat);
                     return (
                       <div
                         key={cat}
@@ -1520,23 +1556,21 @@ export default function Admin() {
                           <span>{cat}</span>
                         </button>
 
-                        {isCustom && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveProjectCategory(cat);
-                            }}
-                            title={`Remove custom category "${cat}"`}
-                            className={`mr-1 flex h-3.5 w-3.5 items-center justify-center rounded-full transition ${
-                              isSelected
-                                ? "text-white/70 hover:bg-white/20 hover:text-white"
-                                : "text-slate-400 hover:bg-red-50 hover:text-red-500"
-                            }`}
-                          >
-                            <X size={10} />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveProjectCategory(cat);
+                          }}
+                          title={`Remove category "${cat}"`}
+                          className={`mr-1 flex h-3.5 w-3.5 items-center justify-center rounded-full transition ${
+                            isSelected
+                              ? "text-white/70 hover:bg-white/20 hover:text-white"
+                              : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                          }`}
+                        >
+                          <X size={10} />
+                        </button>
                       </div>
                     );
                   })}
@@ -1737,19 +1771,32 @@ export default function Admin() {
                     <Tag size={13} className="text-[#0066B4]" />
                     <span>Category *</span>
                   </label>
-                  {!isAddingNewGalleryCat && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingNewGalleryCat(true);
-                        setNewGalleryCatInput("");
-                      }}
-                      className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2.5 py-1 text-[11px] font-semibold text-[#0066B4] shadow-sm transition hover:bg-[#0066B4] hover:text-white"
-                    >
-                      <Plus size={12} />
-                      <span>Add New Category</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {removedGalleryCats.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRestoreDefaultGalleryCategories}
+                        className="flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50"
+                        title="Restore default gallery categories"
+                      >
+                        <RefreshCw size={11} />
+                        <span>Restore Defaults</span>
+                      </button>
+                    )}
+                    {!isAddingNewGalleryCat && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewGalleryCat(true);
+                          setNewGalleryCatInput("");
+                        }}
+                        className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2.5 py-1 text-[11px] font-semibold text-[#0066B4] shadow-sm transition hover:bg-[#0066B4] hover:text-white"
+                      >
+                        <Plus size={12} />
+                        <span>Add New Category</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Inline New Category Creation Input */}
@@ -1790,11 +1837,10 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Modern Pill Chips Selector with Remove Category Option for Custom Categories */}
+                {/* Modern Pill Chips Selector with Remove Option for All Categories */}
                 <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-2.5">
                   {allGalleryCategories.map((cat) => {
                     const isSelected = galleryForm.category === cat;
-                    const isCustom = !DEFAULT_GALLERY_CATS.includes(cat);
                     return (
                       <div
                         key={cat}
@@ -1813,23 +1859,21 @@ export default function Admin() {
                           <span>{cat}</span>
                         </button>
 
-                        {isCustom && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveGalleryCategory(cat);
-                            }}
-                            title={`Remove custom category "${cat}"`}
-                            className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
-                              isSelected
-                                ? "text-white/70 hover:bg-white/20 hover:text-white"
-                                : "text-slate-400 hover:bg-red-50 hover:text-red-500"
-                            }`}
-                          >
-                            <X size={11} />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveGalleryCategory(cat);
+                          }}
+                          title={`Remove category "${cat}"`}
+                          className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
+                            isSelected
+                              ? "text-white/70 hover:bg-white/20 hover:text-white"
+                              : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                          }`}
+                        >
+                          <X size={11} />
+                        </button>
                       </div>
                     );
                   })}
@@ -2066,19 +2110,32 @@ export default function Admin() {
                     <Tag size={13} className="text-[#0066B4]" />
                     <span>Category *</span>
                   </label>
-                  {!isAddingNewGalleryCat && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAddingNewGalleryCat(true);
-                        setNewGalleryCatInput("");
-                      }}
-                      className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2.5 py-1 text-[11px] font-semibold text-[#0066B4] shadow-sm transition hover:bg-[#0066B4] hover:text-white"
-                    >
-                      <Plus size={12} />
-                      <span>Add New Category</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {removedGalleryCats.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRestoreDefaultGalleryCategories}
+                        className="flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:bg-slate-50"
+                        title="Restore default gallery categories"
+                      >
+                        <RefreshCw size={11} />
+                        <span>Restore Defaults</span>
+                      </button>
+                    )}
+                    {!isAddingNewGalleryCat && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingNewGalleryCat(true);
+                          setNewGalleryCatInput("");
+                        }}
+                        className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2.5 py-1 text-[11px] font-semibold text-[#0066B4] shadow-sm transition hover:bg-[#0066B4] hover:text-white"
+                      >
+                        <Plus size={12} />
+                        <span>Add New Category</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Inline New Category Input */}
@@ -2119,11 +2176,10 @@ export default function Admin() {
                   </div>
                 )}
 
-                {/* Category Chips */}
+                {/* Category Chips with Remove Option on All Categories */}
                 <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-2.5">
                   {allGalleryCategories.map((cat) => {
                     const isSelected = galleryForm.category === cat;
-                    const isCustom = !DEFAULT_GALLERY_CATS.includes(cat);
                     return (
                       <div
                         key={cat}
@@ -2141,20 +2197,19 @@ export default function Admin() {
                           {isSelected && <Check size={12} className="stroke-[2.5]" />}
                           <span>{cat}</span>
                         </button>
-                        {isCustom && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveGalleryCategory(cat);
-                            }}
-                            className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
-                              isSelected ? "text-white/70 hover:bg-white/20 hover:text-white" : "text-slate-400 hover:bg-red-50 hover:text-red-500"
-                            }`}
-                          >
-                            <X size={11} />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveGalleryCategory(cat);
+                          }}
+                          title={`Remove category "${cat}"`}
+                          className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
+                            isSelected ? "text-white/70 hover:bg-white/20 hover:text-white" : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                          }`}
+                        >
+                          <X size={11} />
+                        </button>
                       </div>
                     );
                   })}
