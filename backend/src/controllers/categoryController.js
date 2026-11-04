@@ -253,3 +253,4 @@ export const resetCategoriesByType = async (req, res) => {
     });
   }
 };
+

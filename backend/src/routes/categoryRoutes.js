@@ -16,3 +16,4 @@ router
 router.route("/:type/reset").post(resetCategoriesByType);
 
 export default router;
+
