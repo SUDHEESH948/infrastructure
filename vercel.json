@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "buildCommand": "cd infrastructure && npm install && npm run build",
+  "outputDirectory": "infrastructure/dist",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://infrastructure-c5az.onrender.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://infrastructure-c5az.onrender.com/uploads/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

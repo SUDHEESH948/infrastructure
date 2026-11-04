@@ -2,6 +2,7 @@
   "name": "infrastructure-root",
   "private": true,
   "scripts": {
+    "build": "cd infrastructure && npm run build",
     "dev:backend": "cd backend && npm run dev",
     "start:backend": "cd backend && npm start",
     "seed": "cd backend && npm run seed",

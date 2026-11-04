@@ -1,6 +1,8 @@
 // Base API URL:
-// In dev with Vite proxy, "/api" proxies to "http://localhost:5000/api"
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+// In dev or with Vercel rewrites, "/api" proxies directly to Render.
+// When VITE_API_URL is defined, trailing slashes are trimmed for clean route concatenation.
+const rawApiBase = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = rawApiBase.replace(/\/+$/, "");
 
 /* =========================================================
    IMAGE UPLOAD API (Stores images into server folder)
