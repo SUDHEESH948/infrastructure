@@ -1,41 +1,15 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import {
+  uploadBufferToGridFS,
+  streamFileFromGridFS,
+  deleteFileFromGridFS,
+} from "../config/gridfs.js";
+import { removeUploadedFile } from "../utils/fileRemover.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const UPLOADS_ROOT = path.join(__dirname, "../../uploads");
-
-// Ensure upload directories exist
-const ensureDirExists = (dirPath) => {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-};
-ensureDirExists(UPLOADS_ROOT);
-
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const subfolder = req.query.folder === "projects" ? "projects" : req.query.folder === "gallery" ? "gallery" : "";
-    const targetDir = subfolder ? path.join(UPLOADS_ROOT, subfolder) : UPLOADS_ROOT;
-    ensureDirExists(targetDir);
-    cb(null, targetDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate clean unique filename: image-1719827361928-original.jpg
-    const ext = path.extname(file.originalname).toLowerCase();
-    const cleanBase = path
-      .basename(file.originalname, ext)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "-")
-      .slice(0, 30);
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e4);
-    cb(null, `${cleanBase}-${uniqueSuffix}${ext}`);
-  },
-});
+// Use memory storage for direct streaming to MongoDB Atlas GridFS
+const storage = multer.memoryStorage();
 
 // Media File Filter (Images and Videos)
 const fileFilter = (req, file, cb) => {
@@ -54,13 +28,11 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for photos (3MP+) and videos
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for high-res images and videos
   fileFilter,
 });
 
 const router = express.Router();
-
-import { removeUploadedFile } from "../utils/fileRemover.js";
 
 // Helper middleware for single media upload (image, video, or file field name)
 const singleMediaUpload = (req, res, next) => {
@@ -99,10 +71,10 @@ const multipleMediaUpload = (req, res, next) => {
   });
 };
 
-// @desc    Upload single media (image or video)
+// @desc    Upload single media (image or video) directly into MongoDB Atlas GridFS
 // @route   POST /api/upload
 // @access  Admin
-router.post("/", singleMediaUpload, (req, res) => {
+router.post("/", singleMediaUpload, async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       success: false,
@@ -110,27 +82,55 @@ router.post("/", singleMediaUpload, (req, res) => {
     });
   }
 
-  // Construct relative URL for web client
-  const subfolder = req.query.folder === "projects" ? "projects/" : req.query.folder === "gallery" ? "gallery/" : "";
-  const relativePath = `/uploads/${subfolder}${req.file.filename}`;
-  const isVideo = req.file.mimetype.startsWith("video/") || /\.(mp4|webm|mov|mkv|ogg|avi)$/i.test(req.file.filename);
+  try {
+    const subfolder = req.query.folder === "projects" ? "projects" : req.query.folder === "gallery" ? "gallery" : "general";
+    const isVideo = req.file.mimetype.startsWith("video/") || /\.(mp4|webm|mov|mkv|ogg|avi)$/i.test(req.file.originalname);
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const cleanBase = path
+      .basename(req.file.originalname, ext)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .slice(0, 30);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e4);
+    const filename = `${cleanBase}-${uniqueSuffix}${ext}`;
 
-  res.status(200).json({
-    success: true,
-    message: `${isVideo ? "Video" : "Image"} uploaded and stored successfully`,
-    filename: req.file.filename,
-    filePath: relativePath,
-    url: relativePath,
-    size: req.file.size,
-    mediaType: isVideo ? "video" : "image",
-    mimetype: req.file.mimetype,
-  });
+    const storedFile = await uploadBufferToGridFS({
+      buffer: req.file.buffer,
+      filename,
+      mimetype: req.file.mimetype,
+      metadata: {
+        folder: subfolder,
+        originalName: req.file.originalname,
+        mediaType: isVideo ? "video" : "image",
+      },
+    });
+
+    const fileUrl = `/api/upload/file/${storedFile.fileId}`;
+
+    res.status(200).json({
+      success: true,
+      message: `${isVideo ? "Video" : "Image"} permanently stored in MongoDB Atlas`,
+      fileId: storedFile.fileId,
+      filename: storedFile.filename,
+      filePath: fileUrl,
+      url: fileUrl,
+      size: storedFile.size,
+      mediaType: isVideo ? "video" : "image",
+      mimetype: req.file.mimetype,
+    });
+  } catch (error) {
+    console.error("MongoDB Upload Error:", error);
+    res.status(500).json({
+      success: false,
+      message: `Failed to store media in MongoDB Atlas: ${error.message}`,
+    });
+  }
 });
 
-// @desc    Upload multiple media files (up to 30 images / videos)
+// @desc    Upload multiple media files (up to 30 images / videos) into MongoDB Atlas GridFS
 // @route   POST /api/upload/multiple
 // @access  Admin
-router.post("/multiple", multipleMediaUpload, (req, res) => {
+router.post("/multiple", multipleMediaUpload, async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({
       success: false,
@@ -138,53 +138,103 @@ router.post("/multiple", multipleMediaUpload, (req, res) => {
     });
   }
 
-  const subfolder =
-    req.query.folder === "projects"
-      ? "projects/"
-      : req.query.folder === "gallery"
-      ? "gallery/"
-      : "";
+  try {
+    const subfolder = req.query.folder === "projects" ? "projects" : req.query.folder === "gallery" ? "gallery" : "general";
 
-  const files = req.files.map((file) => {
-    const relativePath = `/uploads/${subfolder}${file.filename}`;
-    const isVideo = file.mimetype.startsWith("video/") || /\.(mp4|webm|mov|mkv|ogg|avi)$/i.test(file.filename);
-    return {
-      filename: file.filename,
-      filePath: relativePath,
-      url: relativePath,
-      size: file.size,
-      mediaType: isVideo ? "video" : "image",
-      mimetype: file.mimetype,
-      originalName: file.originalname,
-    };
-  });
+    const files = await Promise.all(
+      req.files.map(async (file) => {
+        const isVideo = file.mimetype.startsWith("video/") || /\.(mp4|webm|mov|mkv|ogg|avi)$/i.test(file.originalname);
+        const ext = path.extname(file.originalname).toLowerCase();
+        const cleanBase = path
+          .basename(file.originalname, ext)
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .slice(0, 30);
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e4);
+        const filename = `${cleanBase}-${uniqueSuffix}${ext}`;
 
-  res.status(200).json({
-    success: true,
-    message: `${files.length} media file(s) uploaded and stored successfully`,
-    count: files.length,
-    files,
-  });
+        const stored = await uploadBufferToGridFS({
+          buffer: file.buffer,
+          filename,
+          mimetype: file.mimetype,
+          metadata: {
+            folder: subfolder,
+            originalName: file.originalname,
+            mediaType: isVideo ? "video" : "image",
+          },
+        });
+
+        const fileUrl = `/api/upload/file/${stored.fileId}`;
+        return {
+          fileId: stored.fileId,
+          filename: stored.filename,
+          filePath: fileUrl,
+          url: fileUrl,
+          size: stored.size,
+          mediaType: isVideo ? "video" : "image",
+          mimetype: file.mimetype,
+          originalName: file.originalname,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `${files.length} media file(s) permanently stored in MongoDB Atlas`,
+      count: files.length,
+      files,
+    });
+  } catch (error) {
+    console.error("MongoDB Multiple Upload Error:", error);
+    res.status(500).json({
+      success: false,
+      message: `Failed to store media files in MongoDB: ${error.message}`,
+    });
+  }
 });
 
-// @desc    Delete uploaded image file from disk
+// @desc    Stream or download media file from MongoDB GridFS by ID or filename
+// @route   GET /api/upload/file/:id
+// @access  Public
+router.get("/file/:id", (req, res) => {
+  streamFileFromGridFS(req.params.id, req, res);
+});
+
+// @desc    Stream or download media file from MongoDB GridFS by filename
+// @route   GET /api/upload/raw/:filename
+// @access  Public
+router.get("/raw/:filename", (req, res) => {
+  streamFileFromGridFS(req.params.filename, req, res);
+});
+
+// @desc    Delete media file from MongoDB GridFS and local disk
 // @route   DELETE /api/upload
 // @access  Admin
-router.delete("/", (req, res) => {
-  const filePath = req.query.path || req.body.path;
+router.delete("/", async (req, res) => {
+  const filePath = req.query.path || req.body.path || req.query.id || req.body.id;
 
   if (!filePath) {
-    return res.status(400).json({ success: false, message: "File path is required" });
+    return res.status(400).json({ success: false, message: "File path or ID is required" });
   }
 
-  const deleted = removeUploadedFile(filePath);
+  // 1. Try deleting from MongoDB GridFS
+  const cleanIdOrName = path.basename(filePath);
+  const deletedFromMongo = await deleteFileFromGridFS(cleanIdOrName);
 
-  if (deleted) {
-    return res.status(200).json({ success: true, message: "File deleted from uploads folder" });
+  // 2. Also try deleting from local disk if it existed locally
+  const deletedFromDisk = removeUploadedFile(filePath);
+
+  if (deletedFromMongo || deletedFromDisk) {
+    return res.status(200).json({
+      success: true,
+      message: "File deleted successfully from MongoDB storage",
+    });
   }
 
-  return res.status(404).json({ success: false, message: "File not found or not in uploads folder" });
+  return res.status(404).json({
+    success: false,
+    message: "File not found in storage",
+  });
 });
 
 export default router;
-

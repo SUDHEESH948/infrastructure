@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import cors from "cors";
 import morgan from "morgan";
 import { connectDB } from "./src/config/db.js";
+import { streamFileFromGridFS, migrateLocalUploadsToGridFS } from "./src/config/gridfs.js";
 import projectRoutes from "./src/routes/projectRoutes.js";
 import serviceRoutes from "./src/routes/serviceRoutes.js";
 import galleryRoutes from "./src/routes/galleryRoutes.js";
@@ -20,8 +21,12 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 // Initialize Express
 const app = express();
 
-// Connect to MongoDB Atlas
-connectDB();
+// Connect to MongoDB Atlas and initialize GridFS storage
+connectDB().then((connected) => {
+  if (connected) {
+    migrateLocalUploadsToGridFS();
+  }
+});
 
 // CORS configuration (supports localhost, Vercel deployments, and production URLs)
 const allowedOrigins = [
@@ -71,8 +76,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Static Files (Uploaded images in /uploads folder)
+// Static Files (Uploaded images on disk with MongoDB Atlas GridFS fallback)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.get("/uploads/*", (req, res) => {
+  const filename = path.basename(req.path);
+  streamFileFromGridFS(filename, req, res);
+});
 
 // API Routes
 app.use("/api/projects", projectRoutes);

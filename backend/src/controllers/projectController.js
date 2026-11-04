@@ -257,9 +257,9 @@ export const deleteProject = async (req, res) => {
         return res.status(404).json({ success: false, message: "Project not found" });
       }
 
-      // Automatically remove uploaded image file from uploads/projects folder
+      // Automatically remove uploaded image file from storage
       if (project.image) {
-        removeUploadedFile(project.image);
+        await removeUploadedFile(project.image);
       }
 
       return res.status(200).json({ success: true, message: "Project and image deleted successfully" });
@@ -272,7 +272,7 @@ export const deleteProject = async (req, res) => {
     }
 
     if (targetProject.image) {
-      removeUploadedFile(targetProject.image);
+      await removeUploadedFile(targetProject.image);
     }
 
     inMemoryProjects = inMemoryProjects.filter((p) => p.projectId !== id && p._id !== id);

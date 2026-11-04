@@ -177,9 +177,9 @@ export const deleteGalleryItem = async (req, res) => {
         return res.status(404).json({ success: false, message: "Gallery item not found" });
       }
 
-      // Automatically delete the uploaded file from uploads/ folder
+      // Automatically delete the uploaded file from storage
       if (item.image) {
-        removeUploadedFile(item.image);
+        await removeUploadedFile(item.image);
       }
 
       return res.status(200).json({ success: true, message: "Gallery item deleted successfully" });
@@ -194,7 +194,7 @@ export const deleteGalleryItem = async (req, res) => {
     }
 
     if (targetItem.image) {
-      removeUploadedFile(targetItem.image);
+      await removeUploadedFile(targetItem.image);
     }
 
     inMemoryGallery = inMemoryGallery.filter((i) => i.galleryId !== id && i._id !== id);
