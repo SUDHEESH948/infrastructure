@@ -120,16 +120,62 @@ const OurProjects = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectList, setProjectList] = useState(defaultProjects);
 
-  // Dynamically compute all categories from default + live projects
+  // Sync category changes from admin portal (localStorage)
+  const [removedCategories, setRemovedCategories] = useState(() => {
+    try {
+      const removed = localStorage.getItem("onset_removed_project_cats");
+      return removed ? JSON.parse(removed) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [activeCategoriesList, setActiveCategoriesList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("onset_project_categories_list");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      try {
+        const removed = localStorage.getItem("onset_removed_project_cats");
+        setRemovedCategories(removed ? JSON.parse(removed) : []);
+        const saved = localStorage.getItem("onset_project_categories_list");
+        setActiveCategoriesList(saved ? JSON.parse(saved) : null);
+      } catch (err) {
+        console.warn("Project category storage sync error:", err);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageUpdate);
+    window.addEventListener("focus", handleStorageUpdate);
+    return () => {
+      window.removeEventListener("storage", handleStorageUpdate);
+      window.removeEventListener("focus", handleStorageUpdate);
+    };
+  }, []);
+
+  // Dynamically compute all categories from stored/default + live projects, excluding removed
   const categories = [
     "All",
     ...Array.from(
       new Set([
-        ...defaultCategories.filter((c) => c !== "All"),
+        ...(activeCategoriesList || defaultCategories.filter((c) => c !== "All")),
         ...projectList.map((p) => p.category).filter(Boolean),
       ])
-    ),
+    ).filter((cat) => !removedCategories.includes(cat)),
   ];
+
+  // If currently active category was removed, fallback to "All"
+  useEffect(() => {
+    if (activeCategory !== "All" && removedCategories.includes(activeCategory)) {
+      setActiveCategory("All");
+    }
+  }, [removedCategories, activeCategory]);
 
   // Fetch live projects from backend API and auto-refresh on focus/updates
   useEffect(() => {
@@ -186,12 +232,13 @@ const OurProjects = () => {
     };
   }, [selectedProject]);
 
-  const filteredProjects =
-    activeCategory === "All"
-      ? projectList
-      : projectList.filter(
-          (project) => project.category === activeCategory
-        );
+  const filteredProjects = projectList
+    .filter((project) => !removedCategories.includes(project.category))
+    .filter((project) =>
+      activeCategory === "All"
+        ? true
+        : project.category?.toLowerCase() === activeCategory?.toLowerCase()
+    );
 
   return (
     <main className="min-h-screen bg-white text-[#17221D]">

@@ -27,6 +27,7 @@ import {
   Video,
   Film,
   Play,
+  ArrowUpRight,
 } from "lucide-react";
 
 const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url || "");

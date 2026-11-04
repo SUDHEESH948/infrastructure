@@ -104,16 +104,62 @@ const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState(galleryItems);
 
-  // Dynamically compute all categories from default + live items
+  // Sync category changes from admin portal (localStorage)
+  const [removedCategories, setRemovedCategories] = useState(() => {
+    try {
+      const removed = localStorage.getItem("onset_removed_gallery_cats");
+      return removed ? JSON.parse(removed) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [activeCategoriesList, setActiveCategoriesList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("onset_gallery_categories_list");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      try {
+        const removed = localStorage.getItem("onset_removed_gallery_cats");
+        setRemovedCategories(removed ? JSON.parse(removed) : []);
+        const saved = localStorage.getItem("onset_gallery_categories_list");
+        setActiveCategoriesList(saved ? JSON.parse(saved) : null);
+      } catch (err) {
+        console.warn("Category storage sync error:", err);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageUpdate);
+    window.addEventListener("focus", handleStorageUpdate);
+    return () => {
+      window.removeEventListener("storage", handleStorageUpdate);
+      window.removeEventListener("focus", handleStorageUpdate);
+    };
+  }, []);
+
+  // Dynamically compute all categories from stored/default + live items, excluding removed
   const categories = [
     "All",
     ...Array.from(
       new Set([
-        ...defaultCategories.filter((c) => c !== "All"),
+        ...(activeCategoriesList || defaultCategories.filter((c) => c !== "All")),
         ...items.map((item) => item.category).filter(Boolean),
       ])
-    ),
+    ).filter((cat) => !removedCategories.includes(cat)),
   ];
+
+  // If currently active category was removed, fallback to "All"
+  useEffect(() => {
+    if (activeCategory !== "All" && removedCategories.includes(activeCategory)) {
+      setActiveCategory("All");
+    }
+  }, [removedCategories, activeCategory]);
 
   // Fetch live gallery from backend API and auto-refresh on focus/updates
   useEffect(() => {
@@ -166,10 +212,13 @@ const Gallery = () => {
     };
   }, [selectedImage]);
 
-  const filteredItems =
-    activeCategory === "All"
-      ? items
-      : items.filter((item) => item.category === activeCategory);
+  const filteredItems = items
+    .filter((item) => !removedCategories.includes(item.category))
+    .filter((item) =>
+      activeCategory === "All"
+        ? true
+        : item.category?.toLowerCase() === activeCategory?.toLowerCase()
+    );
 
   return (
     <main className="min-h-screen bg-white text-[#17221D]">
