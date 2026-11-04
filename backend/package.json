@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "kill": "npx kill-port 5000",
     "seed": "node src/seeder.js",
     "seed:destroy": "node src/seeder.js -d"
   },
