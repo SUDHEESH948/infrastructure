@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowUpRight, Play, Film } from "lucide-react";
-import { fetchGalleryFromAPI } from "../services/api";
+import { fetchGalleryFromAPI, fetchCategoriesByTypeAPI } from "../services/api";
 
 const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url || "");
 
@@ -104,46 +104,64 @@ const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState(galleryItems);
 
-  // Sync category changes from admin portal (localStorage)
-  const [removedCategories, setRemovedCategories] = useState(() => {
-    try {
-      const removed = localStorage.getItem("onset_removed_gallery_cats");
-      return removed ? JSON.parse(removed) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Active & removed categories loaded directly from MongoDB Atlas
+  const [removedCategories, setRemovedCategories] = useState([]);
+  const [activeCategoriesList, setActiveCategoriesList] = useState(
+    defaultCategories.filter((c) => c !== "All")
+  );
 
-  const [activeCategoriesList, setActiveCategoriesList] = useState(() => {
-    try {
-      const saved = localStorage.getItem("onset_gallery_categories_list");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
+  // Fetch live gallery items & MongoDB Atlas categories
   useEffect(() => {
-    const handleStorageUpdate = () => {
+    let isMounted = true;
+    const loadGalleryAndCategories = async () => {
+      // 1. Fetch live categories from MongoDB Atlas
       try {
-        const removed = localStorage.getItem("onset_removed_gallery_cats");
-        setRemovedCategories(removed ? JSON.parse(removed) : []);
-        const saved = localStorage.getItem("onset_gallery_categories_list");
-        setActiveCategoriesList(saved ? JSON.parse(saved) : null);
+        const catData = await fetchCategoriesByTypeAPI("gallery");
+        if (isMounted && catData) {
+          if (Array.isArray(catData.categories) && catData.categories.length > 0) {
+            setActiveCategoriesList(catData.categories);
+          }
+          if (Array.isArray(catData.removedCategories)) {
+            setRemovedCategories(catData.removedCategories);
+          }
+        }
       } catch (err) {
-        console.warn("Category storage sync error:", err);
+        console.warn("Could not load gallery categories from MongoDB Atlas:", err);
+      }
+
+      // 2. Fetch live gallery items
+      try {
+        const liveItems = await fetchGalleryFromAPI();
+        if (isMounted && liveItems && liveItems.length > 0) {
+          const formatted = liveItems.map((item, idx) => ({
+            id: item.galleryId || item.id || String(idx + 1).padStart(2, "0"),
+            category: item.category,
+            title: item.title,
+            image: item.image,
+            mediaType: item.mediaType || (isVideoUrl(item.image) ? "video" : "image"),
+            youtubeUrl: item.youtubeUrl || "",
+          }));
+          setItems(formatted);
+        }
+      } catch (err) {
+        console.warn("Could not load gallery items from MongoDB Atlas:", err);
       }
     };
 
-    window.addEventListener("storage", handleStorageUpdate);
-    window.addEventListener("focus", handleStorageUpdate);
+    loadGalleryAndCategories();
+
+    const onFocus = () => loadGalleryAndCategories();
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(loadGalleryAndCategories, 6000);
+
     return () => {
-      window.removeEventListener("storage", handleStorageUpdate);
-      window.removeEventListener("focus", handleStorageUpdate);
+      isMounted = false;
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
     };
   }, []);
 
-  // Dynamically compute all categories from stored/default + live items, excluding removed
+  // Dynamically compute all categories from MongoDB + live items, excluding removed
   const categories = [
     "All",
     ...Array.from(
@@ -160,36 +178,6 @@ const Gallery = () => {
       setActiveCategory("All");
     }
   }, [removedCategories, activeCategory]);
-
-  // Fetch live gallery from backend API and auto-refresh on focus/updates
-  useEffect(() => {
-    let isMounted = true;
-    const loadGallery = async () => {
-      const liveItems = await fetchGalleryFromAPI();
-      if (isMounted && liveItems && liveItems.length > 0) {
-        const formatted = liveItems.map((item, idx) => ({
-          id: item.galleryId || item.id || String(idx + 1).padStart(2, "0"),
-          category: item.category,
-          title: item.title,
-          image: item.image,
-          mediaType: item.mediaType || (isVideoUrl(item.image) ? "video" : "image"),
-        }));
-        setItems(formatted);
-      }
-    };
-
-    loadGallery();
-
-    const onFocus = () => loadGallery();
-    window.addEventListener("focus", onFocus);
-    const interval = setInterval(loadGallery, 6000);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener("focus", onFocus);
-      clearInterval(interval);
-    };
-  }, []);
 
   // Lock background scroll on open
   useEffect(() => {

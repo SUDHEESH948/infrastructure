@@ -207,3 +207,57 @@ export const fetchServicesFromAPI = async (category = "All") => {
     return null;
   }
 };
+
+/* =========================================================
+   CATEGORIES API (Stored Permanently in MongoDB Atlas)
+========================================================= */
+
+export const fetchAllCategoriesAPI = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/categories`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const res = await response.json();
+    return res?.data || null;
+  } catch (error) {
+    console.warn("Categories API offline:", error.message);
+    return null;
+  }
+};
+
+export const fetchCategoriesByTypeAPI = async (type) => {
+  try {
+    const response = await fetch(`${API_BASE}/categories/${type}`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const res = await response.json();
+    return res?.data || null;
+  } catch (error) {
+    console.warn(`Category API for ${type} offline:`, error.message);
+    return null;
+  }
+};
+
+export const updateCategoriesAPI = async (type, categories, removedCategories = []) => {
+  const response = await fetch(`${API_BASE}/categories/${type}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ categories, removedCategories }),
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || "Failed to update categories in MongoDB");
+  }
+  return response.json();
+};
+
+export const resetCategoriesAPI = async (type) => {
+  const response = await fetch(`${API_BASE}/categories/${type}/reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || "Failed to reset categories in MongoDB");
+  }
+  return response.json();
+};
+

@@ -48,6 +48,10 @@ import {
   loginAdminAPI,
   uploadImageAPI,
   uploadMultipleImagesAPI,
+  fetchAllCategoriesAPI,
+  fetchCategoriesByTypeAPI,
+  updateCategoriesAPI,
+  resetCategoriesAPI,
 } from "../services/api";
 import logo from "../assets/logo/onsite infra.png";
 
@@ -152,49 +156,63 @@ export default function Admin() {
     "Interiors",
   ];
 
-  // Removed Categories tracking (Persisted so removed categories never resurrect)
-  const [removedGalleryCats, setRemovedGalleryCats] = useState(() => {
-    try {
-      const saved = localStorage.getItem("onset_removed_gallery_cats");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Removed Categories tracking (Persisted permanently in MongoDB Atlas)
+  const [removedGalleryCats, setRemovedGalleryCats] = useState([]);
+  const [removedProjectCats, setRemovedProjectCats] = useState([]);
 
-  const [removedProjectCats, setRemovedProjectCats] = useState(() => {
-    try {
-      const saved = localStorage.getItem("onset_removed_project_cats");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Active Category Lists (Persisted permanently in MongoDB Atlas)
+  const [galleryCategoriesList, setGalleryCategoriesList] = useState(DEFAULT_GALLERY_CATS);
+  const [projectCategoriesList, setProjectCategoriesList] = useState(DEFAULT_PROJECT_CATS);
 
-  // Active Category Lists (Persisted in localStorage)
-  const [galleryCategoriesList, setGalleryCategoriesList] = useState(() => {
-    try {
-      const saved = localStorage.getItem("onset_gallery_categories_list");
-      if (saved) return JSON.parse(saved);
-      const oldCustom = localStorage.getItem("onset_custom_gallery_categories");
-      const extras = oldCustom ? JSON.parse(oldCustom) : [];
-      return Array.from(new Set([...DEFAULT_GALLERY_CATS, ...extras]));
-    } catch {
-      return DEFAULT_GALLERY_CATS;
-    }
-  });
+  // Load categories directly from MongoDB Atlas on mount & on window focus
+  useEffect(() => {
+    let isMounted = true;
+    const loadCategoriesFromDB = async () => {
+      try {
+        const data = await fetchAllCategoriesAPI();
+        if (!isMounted || !data) return;
 
-  const [projectCategoriesList, setProjectCategoriesList] = useState(() => {
-    try {
-      const saved = localStorage.getItem("onset_project_categories_list");
-      if (saved) return JSON.parse(saved);
-      const oldCustom = localStorage.getItem("onset_custom_project_categories");
-      const extras = oldCustom ? JSON.parse(oldCustom) : [];
-      return Array.from(new Set([...DEFAULT_PROJECT_CATS, ...extras]));
-    } catch {
-      return DEFAULT_PROJECT_CATS;
-    }
-  });
+        if (data.gallery) {
+          if (Array.isArray(data.gallery.categories) && data.gallery.categories.length > 0) {
+            setGalleryCategoriesList(data.gallery.categories);
+          }
+          if (Array.isArray(data.gallery.removedCategories)) {
+            setRemovedGalleryCats(data.gallery.removedCategories);
+          }
+        }
+
+        if (data.project) {
+          if (Array.isArray(data.project.categories) && data.project.categories.length > 0) {
+            setProjectCategoriesList(data.project.categories);
+          }
+          if (Array.isArray(data.project.removedCategories)) {
+            setRemovedProjectCats(data.project.removedCategories);
+          }
+        }
+
+        // Clean up legacy localStorage items so data is exclusively in MongoDB Atlas
+        try {
+          localStorage.removeItem("onset_gallery_categories_list");
+          localStorage.removeItem("onset_removed_gallery_cats");
+          localStorage.removeItem("onset_custom_gallery_categories");
+          localStorage.removeItem("onset_project_categories_list");
+          localStorage.removeItem("onset_removed_project_cats");
+          localStorage.removeItem("onset_custom_project_categories");
+        } catch {
+          // ignore
+        }
+      } catch (err) {
+        console.warn("Could not fetch categories from MongoDB Atlas:", err);
+      }
+    };
+
+    loadCategoriesFromDB();
+    window.addEventListener("focus", loadCategoriesFromDB);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("focus", loadCategoriesFromDB);
+    };
+  }, []);
 
   const [isAddingNewGalleryCat, setIsAddingNewGalleryCat] = useState(false);
   const [newGalleryCatInput, setNewGalleryCatInput] = useState("");
@@ -217,7 +235,7 @@ export default function Admin() {
     ])
   ).filter((cat) => !removedProjectCats.includes(cat));
 
-  const handleAddGalleryCategory = (e) => {
+  const handleAddGalleryCategory = async (e) => {
     if (e) e.preventDefault();
     const trimmed = newGalleryCatInput.trim();
     if (!trimmed) return;
@@ -228,22 +246,21 @@ export default function Admin() {
       .join(" ");
 
     const updated = Array.from(new Set([...galleryCategoriesList, formatted]));
-    setGalleryCategoriesList(updated);
-
     const updatedRemoved = removedGalleryCats.filter((c) => c !== formatted);
+
+    setGalleryCategoriesList(updated);
     setRemovedGalleryCats(updatedRemoved);
-
-    try {
-      localStorage.setItem("onset_gallery_categories_list", JSON.stringify(updated));
-      localStorage.setItem("onset_removed_gallery_cats", JSON.stringify(updatedRemoved));
-    } catch (err) {
-      console.warn("localStorage write failed:", err);
-    }
-
     setGalleryForm((prev) => ({ ...prev, category: formatted }));
     setNewGalleryCatInput("");
     setIsAddingNewGalleryCat(false);
-    showNotification(`Category "${formatted}" added and selected!`);
+
+    try {
+      await updateCategoriesAPI("gallery", updated, updatedRemoved);
+      showNotification(`Category "${formatted}" saved to MongoDB Atlas!`);
+    } catch (err) {
+      console.error("MongoDB Category save error:", err);
+      showNotification(`Category added; MongoDB sync error: ${err.message}`, "error");
+    }
   };
 
   const handleRemoveGalleryCategory = (catToRemove) => {
@@ -255,23 +272,15 @@ export default function Admin() {
     setConfirmDialog({
       isOpen: true,
       title: "Remove Category",
-      message: `Are you sure you want to remove the category "${catToRemove}"?`,
+      message: `Are you sure you want to remove the category "${catToRemove}"? This will be saved to MongoDB Atlas.`,
       confirmText: "Remove Category",
       isDanger: true,
-      onConfirm: () => {
+      onConfirm: async () => {
         const updated = galleryCategoriesList.filter((c) => c !== catToRemove);
-        setGalleryCategoriesList(updated);
-
         const newRemoved = Array.from(new Set([...removedGalleryCats, catToRemove]));
-        setRemovedGalleryCats(newRemoved);
 
-        try {
-          localStorage.setItem("onset_gallery_categories_list", JSON.stringify(updated));
-          localStorage.setItem("onset_removed_gallery_cats", JSON.stringify(newRemoved));
-          localStorage.removeItem("onset_custom_gallery_categories");
-        } catch (err) {
-          console.warn("localStorage write failed:", err);
-        }
+        setGalleryCategoriesList(updated);
+        setRemovedGalleryCats(newRemoved);
 
         if (galleryForm.category === catToRemove) {
           const remaining = allGalleryCategories.filter((c) => c !== catToRemove);
@@ -282,12 +291,19 @@ export default function Admin() {
         }
 
         setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-        showNotification(`Category "${catToRemove}" removed!`);
+
+        try {
+          await updateCategoriesAPI("gallery", updated, newRemoved);
+          showNotification(`Category "${catToRemove}" removed from MongoDB Atlas!`);
+        } catch (err) {
+          console.error("MongoDB Category remove error:", err);
+          showNotification(`Removed locally; MongoDB sync error: ${err.message}`, "error");
+        }
       },
     });
   };
 
-  const handleAddProjectCategory = (e) => {
+  const handleAddProjectCategory = async (e) => {
     if (e) e.preventDefault();
     const trimmed = newProjectCatInput.trim();
     if (!trimmed) return;
@@ -298,22 +314,21 @@ export default function Admin() {
       .join(" ");
 
     const updated = Array.from(new Set([...projectCategoriesList, formatted]));
-    setProjectCategoriesList(updated);
-
     const updatedRemoved = removedProjectCats.filter((c) => c !== formatted);
+
+    setProjectCategoriesList(updated);
     setRemovedProjectCats(updatedRemoved);
-
-    try {
-      localStorage.setItem("onset_project_categories_list", JSON.stringify(updated));
-      localStorage.setItem("onset_removed_project_cats", JSON.stringify(updatedRemoved));
-    } catch (err) {
-      console.warn("localStorage write failed:", err);
-    }
-
     setProjectForm((prev) => ({ ...prev, category: formatted }));
     setNewProjectCatInput("");
     setIsAddingNewProjectCat(false);
-    showNotification(`Category "${formatted}" added and selected!`);
+
+    try {
+      await updateCategoriesAPI("project", updated, updatedRemoved);
+      showNotification(`Category "${formatted}" saved to MongoDB Atlas!`);
+    } catch (err) {
+      console.error("MongoDB Category save error:", err);
+      showNotification(`Category added; MongoDB sync error: ${err.message}`, "error");
+    }
   };
 
   const handleRemoveProjectCategory = (catToRemove) => {
@@ -325,23 +340,15 @@ export default function Admin() {
     setConfirmDialog({
       isOpen: true,
       title: "Remove Category",
-      message: `Are you sure you want to remove the category "${catToRemove}"?`,
+      message: `Are you sure you want to remove the category "${catToRemove}"? This will be saved to MongoDB Atlas.`,
       confirmText: "Remove Category",
       isDanger: true,
-      onConfirm: () => {
+      onConfirm: async () => {
         const updated = projectCategoriesList.filter((c) => c !== catToRemove);
-        setProjectCategoriesList(updated);
-
         const newRemoved = Array.from(new Set([...removedProjectCats, catToRemove]));
-        setRemovedProjectCats(newRemoved);
 
-        try {
-          localStorage.setItem("onset_project_categories_list", JSON.stringify(updated));
-          localStorage.setItem("onset_removed_project_cats", JSON.stringify(newRemoved));
-          localStorage.removeItem("onset_custom_project_categories");
-        } catch (err) {
-          console.warn("localStorage write failed:", err);
-        }
+        setProjectCategoriesList(updated);
+        setRemovedProjectCats(newRemoved);
 
         if (projectForm.category === catToRemove) {
           const remaining = allProjectCategories.filter((c) => c !== catToRemove);
@@ -352,33 +359,40 @@ export default function Admin() {
         }
 
         setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-        showNotification(`Category "${catToRemove}" removed!`);
+
+        try {
+          await updateCategoriesAPI("project", updated, newRemoved);
+          showNotification(`Category "${catToRemove}" removed from MongoDB Atlas!`);
+        } catch (err) {
+          console.error("MongoDB Category remove error:", err);
+          showNotification(`Removed locally; MongoDB sync error: ${err.message}`, "error");
+        }
       },
     });
   };
 
-  const handleRestoreDefaultGalleryCategories = () => {
+  const handleRestoreDefaultGalleryCategories = async () => {
     setRemovedGalleryCats([]);
     setGalleryCategoriesList(DEFAULT_GALLERY_CATS);
     try {
-      localStorage.removeItem("onset_removed_gallery_cats");
-      localStorage.setItem("onset_gallery_categories_list", JSON.stringify(DEFAULT_GALLERY_CATS));
+      await resetCategoriesAPI("gallery");
+      showNotification("Default gallery categories restored in MongoDB Atlas!");
     } catch (err) {
-      console.warn("localStorage write failed:", err);
+      console.error("MongoDB reset error:", err);
+      showNotification(`Restored locally; MongoDB sync error: ${err.message}`, "error");
     }
-    showNotification("Default gallery categories restored!");
   };
 
-  const handleRestoreDefaultProjectCategories = () => {
+  const handleRestoreDefaultProjectCategories = async () => {
     setRemovedProjectCats([]);
     setProjectCategoriesList(DEFAULT_PROJECT_CATS);
     try {
-      localStorage.removeItem("onset_removed_project_cats");
-      localStorage.setItem("onset_project_categories_list", JSON.stringify(DEFAULT_PROJECT_CATS));
+      await resetCategoriesAPI("project");
+      showNotification("Default project categories restored in MongoDB Atlas!");
     } catch (err) {
-      console.warn("localStorage write failed:", err);
+      console.error("MongoDB reset error:", err);
+      showNotification(`Restored locally; MongoDB sync error: ${err.message}`, "error");
     }
-    showNotification("Default project categories restored!");
   };
 
   // Upload States

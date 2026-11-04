@@ -17,7 +17,7 @@ import surveyProjectImg from "../assets/projects/land-site-survey.jpg";
 import managementProjectImg from "../assets/projects/project-management.jpg";
 import nhaiProjectImg from "../assets/projects/nhai-access.jpg";
 import valuationProjectImg from "../assets/projects/estimation-valuation.jpg";
-import { fetchProjectsFromAPI } from "../services/api";
+import { fetchProjectsFromAPI, fetchCategoriesByTypeAPI } from "../services/api";
 
 const iconMap = {
   Route,
@@ -120,46 +120,67 @@ const OurProjects = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectList, setProjectList] = useState(defaultProjects);
 
-  // Sync category changes from admin portal (localStorage)
-  const [removedCategories, setRemovedCategories] = useState(() => {
-    try {
-      const removed = localStorage.getItem("onset_removed_project_cats");
-      return removed ? JSON.parse(removed) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Active & removed categories loaded directly from MongoDB Atlas
+  const [removedCategories, setRemovedCategories] = useState([]);
+  const [activeCategoriesList, setActiveCategoriesList] = useState(
+    defaultCategories.filter((c) => c !== "All")
+  );
 
-  const [activeCategoriesList, setActiveCategoriesList] = useState(() => {
-    try {
-      const saved = localStorage.getItem("onset_project_categories_list");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
+  // Fetch live projects & MongoDB Atlas categories
   useEffect(() => {
-    const handleStorageUpdate = () => {
+    let isMounted = true;
+    const loadProjectsAndCategories = async () => {
+      // 1. Fetch live categories from MongoDB Atlas
       try {
-        const removed = localStorage.getItem("onset_removed_project_cats");
-        setRemovedCategories(removed ? JSON.parse(removed) : []);
-        const saved = localStorage.getItem("onset_project_categories_list");
-        setActiveCategoriesList(saved ? JSON.parse(saved) : null);
+        const catData = await fetchCategoriesByTypeAPI("project");
+        if (isMounted && catData) {
+          if (Array.isArray(catData.categories) && catData.categories.length > 0) {
+            setActiveCategoriesList(catData.categories);
+          }
+          if (Array.isArray(catData.removedCategories)) {
+            setRemovedCategories(catData.removedCategories);
+          }
+        }
       } catch (err) {
-        console.warn("Project category storage sync error:", err);
+        console.warn("Could not load project categories from MongoDB Atlas:", err);
+      }
+
+      // 2. Fetch live projects
+      try {
+        const apiProjects = await fetchProjectsFromAPI();
+        if (isMounted && apiProjects && apiProjects.length > 0) {
+          const formatted = apiProjects.map((p) => ({
+            id: p.projectId || p.id,
+            category: p.category,
+            title: p.title,
+            description: p.description,
+            details: p.details,
+            location: p.location,
+            deliverables: p.deliverables || [],
+            icon: iconMap[p.iconName] || Building2,
+            image: imageMap[p.projectId || p.id] || p.image || buildingProjectImg,
+          }));
+          setProjectList(formatted);
+        }
+      } catch (err) {
+        console.warn("Could not load projects from MongoDB Atlas:", err);
       }
     };
 
-    window.addEventListener("storage", handleStorageUpdate);
-    window.addEventListener("focus", handleStorageUpdate);
+    loadProjectsAndCategories();
+
+    const onFocus = () => loadProjectsAndCategories();
+    window.addEventListener("focus", onFocus);
+    const interval = setInterval(loadProjectsAndCategories, 6000);
+
     return () => {
-      window.removeEventListener("storage", handleStorageUpdate);
-      window.removeEventListener("focus", handleStorageUpdate);
+      isMounted = false;
+      window.removeEventListener("focus", onFocus);
+      clearInterval(interval);
     };
   }, []);
 
-  // Dynamically compute all categories from stored/default + live projects, excluding removed
+  // Dynamically compute all categories from MongoDB + live projects, excluding removed
   const categories = [
     "All",
     ...Array.from(
@@ -176,40 +197,6 @@ const OurProjects = () => {
       setActiveCategory("All");
     }
   }, [removedCategories, activeCategory]);
-
-  // Fetch live projects from backend API and auto-refresh on focus/updates
-  useEffect(() => {
-    let isMounted = true;
-    const loadProjects = async () => {
-      const apiProjects = await fetchProjectsFromAPI();
-      if (isMounted && apiProjects && apiProjects.length > 0) {
-        const formatted = apiProjects.map((p) => ({
-          id: p.projectId || p.id,
-          category: p.category,
-          title: p.title,
-          description: p.description,
-          details: p.details,
-          location: p.location,
-          deliverables: p.deliverables || [],
-          icon: iconMap[p.iconName] || Building2,
-          image: imageMap[p.projectId || p.id] || p.image || buildingProjectImg,
-        }));
-        setProjectList(formatted);
-      }
-    };
-
-    loadProjects();
-
-    const onFocus = () => loadProjects();
-    window.addEventListener("focus", onFocus);
-    const interval = setInterval(loadProjects, 6000);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener("focus", onFocus);
-      clearInterval(interval);
-    };
-  }, []);
 
   // Lock background scroll on open
   useEffect(() => {

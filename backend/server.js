@@ -11,6 +11,7 @@ import serviceRoutes from "./src/routes/serviceRoutes.js";
 import galleryRoutes from "./src/routes/galleryRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import uploadRoutes from "./src/routes/uploadRoutes.js";
+import categoryRoutes from "./src/routes/categoryRoutes.js";
 import { notFound, errorHandler } from "./src/middleware/errorMiddleware.js";
 
 // Load environment variables reliably from backend directory
@@ -89,6 +90,7 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Root route
 app.get("/", (req, res) => {
