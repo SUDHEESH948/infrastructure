@@ -30,6 +30,12 @@ import {
 } from "lucide-react";
 
 const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url || "");
+
+const extractYouTubeId = (url) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/)|img\.youtube\.com\/vi\/)([^#&?/\s]+)/i);
+  return match ? match[1] : null;
+};
 import {
   fetchProjectsFromAPI,
   createProjectAPI,
@@ -118,6 +124,9 @@ export default function Admin() {
 
   // Gallery Modal State
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [galleryMediaTypeTab, setGalleryMediaTypeTab] = useState("upload"); // "upload" | "youtube"
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubePreviewId, setYoutubePreviewId] = useState("");
   const [galleryForm, setGalleryForm] = useState({
     title: "",
     category: "Infrastructure",
@@ -662,9 +671,52 @@ export default function Admin() {
       setIsGalleryModalOpen(false);
       setGalleryForm({ title: "", category: "Infrastructure", image: "" });
       setGalleryUploadedImages([]);
+      setYoutubeUrl("");
+      setYoutubePreviewId("");
       loadAllData();
     } catch (err) {
       showNotification(err.message || "Failed to add gallery item(s)", "error");
+    }
+  };
+
+  const handleYoutubeUrlChange = (url) => {
+    setYoutubeUrl(url);
+    const id = extractYouTubeId(url);
+    setYoutubePreviewId(id || "");
+  };
+
+  const handleSaveYouTubeGallery = async (e) => {
+    e.preventDefault();
+    const id = extractYouTubeId(youtubeUrl);
+    if (!id) {
+      showNotification("Please enter a valid YouTube video URL", "error");
+      return;
+    }
+    if (!galleryForm.title.trim()) {
+      showNotification("Please enter a title for the YouTube video", "error");
+      return;
+    }
+
+    try {
+      const thumbUrl = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      const cleanYtUrl = `https://www.youtube.com/watch?v=${id}`;
+
+      await createGalleryItemAPI({
+        title: galleryForm.title.trim(),
+        category: galleryForm.category || "Infrastructure",
+        image: thumbUrl,
+        mediaType: "youtube",
+        youtubeUrl: cleanYtUrl,
+      });
+
+      showNotification(`YouTube video "${galleryForm.title}" added to gallery!`);
+      setIsGalleryModalOpen(false);
+      setGalleryForm({ title: "", category: "Infrastructure", image: "" });
+      setYoutubeUrl("");
+      setYoutubePreviewId("");
+      loadAllData();
+    } catch (err) {
+      showNotification(err.message || "Failed to add YouTube video", "error");
     }
   };
 
@@ -1257,39 +1309,69 @@ export default function Admin() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {filteredGallery.map((item) => (
-                  <div
-                    key={item.galleryId || item.id || item._id}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
-                      {isVideoUrl(item.image) || item.mediaType === "video" ? (
-                        <div className="relative h-full w-full flex items-center justify-center">
-                          <video
-                            src={item.image}
-                            className="h-full w-full object-cover"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            preload="auto"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
-                              <Play size={14} className="fill-white ml-0.5" />
+                {filteredGallery.map((item) => {
+                  const isYT = item.mediaType === "youtube" || !!item.youtubeUrl || /youtube\.com|youtu\.be/i.test(item.image || "");
+                  const isVid = !isYT && (isVideoUrl(item.image) || item.mediaType === "video");
+                  const ytLink = item.youtubeUrl || (isYT ? `https://www.youtube.com/watch?v=${extractYouTubeId(item.image)}` : "");
+
+                  return (
+                    <div
+                      key={item.galleryId || item.id || item._id}
+                      className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
+                        {isYT ? (
+                          <div
+                            className="relative h-full w-full flex items-center justify-center cursor-pointer"
+                            onClick={() => {
+                              if (ytLink) window.open(ytLink, "_blank", "noopener,noreferrer");
+                            }}
+                            title="Click to preview on YouTube"
+                          >
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-lg backdrop-blur-sm transition group-hover:scale-110">
+                                <Play size={16} className="fill-white ml-0.5" />
+                              </div>
                             </div>
+                            <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow backdrop-blur-sm">
+                              <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                              </svg>
+                              YOUTUBE
+                            </span>
                           </div>
-                          <span className="absolute top-2 left-2 rounded-full bg-black/75 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                            VIDEO
-                          </span>
-                        </div>
-                      ) : (
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                        />
-                      )}
+                        ) : isVid ? (
+                          <div className="relative h-full w-full flex items-center justify-center">
+                            <video
+                              src={item.image}
+                              className="h-full w-full object-cover"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              preload="auto"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+                                <Play size={14} className="fill-white ml-0.5" />
+                              </div>
+                            </div>
+                            <span className="absolute top-2 left-2 rounded-full bg-black/75 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                              VIDEO
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                          />
+                        )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
                       <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white pointer-events-none">
@@ -1311,7 +1393,8 @@ export default function Admin() {
                       </button>
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             )}
           </div>
@@ -1599,10 +1682,41 @@ export default function Admin() {
               Add Gallery Media
             </h2>
             <p className="text-xs text-slate-500">
-              Publish photography or video showcase to the home visual gallery archive.
+              Publish photography, uploaded videos, or YouTube links to the home visual gallery archive.
             </p>
 
-            <form onSubmit={handleSaveGallery} className="mt-5 space-y-3.5 sm:space-y-4">
+            {/* Media Mode Tabs */}
+            <div className="mt-4 flex rounded-xl border border-slate-200 bg-slate-100/90 p-1">
+              <button
+                type="button"
+                onClick={() => setGalleryMediaTypeTab("upload")}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition ${
+                  galleryMediaTypeTab === "upload"
+                    ? "bg-white text-[#0066B4] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <UploadCloud size={14} />
+                <span>Upload Photos & Videos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGalleryMediaTypeTab("youtube")}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition ${
+                  galleryMediaTypeTab === "youtube"
+                    ? "bg-red-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-red-600"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                <span>Add YouTube Link</span>
+              </button>
+            </div>
+
+            {galleryMediaTypeTab === "upload" ? (
+              <form onSubmit={handleSaveGallery} className="mt-5 space-y-3.5 sm:space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">
                   Media Title *
@@ -1869,6 +1983,206 @@ export default function Admin() {
                 </button>
               </div>
             </form>
+          ) : (
+            <form onSubmit={handleSaveYouTubeGallery} className="mt-5 space-y-4">
+              {/* YouTube Link Input */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  YouTube Video Link / URL *
+                </label>
+                <div className="relative">
+                  <input
+                    type="url"
+                    required
+                    value={youtubeUrl}
+                    onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 pl-9 text-xs sm:text-sm text-slate-900 outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/30"
+                  />
+                  <div className="absolute left-3 top-3 text-red-600">
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  </div>
+                </div>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Supports standard watch links, youtu.be short links, and YouTube Shorts.
+                </p>
+              </div>
+
+              {/* YouTube Live Thumbnail Preview Card */}
+              {youtubePreviewId && (
+                <div className="overflow-hidden rounded-2xl border border-red-200 bg-red-50/40 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                      <CheckCircle2 size={14} />
+                      <span>Valid YouTube Video (ID: {youtubePreviewId})</span>
+                    </span>
+                    <a
+                      href={`https://www.youtube.com/watch?v=${youtubePreviewId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-[11px] font-medium text-red-600 hover:underline"
+                    >
+                      <span>Test link</span>
+                      <ArrowUpRight size={12} />
+                    </a>
+                  </div>
+
+                  <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
+                    <img
+                      src={`https://img.youtube.com/vi/${youtubePreviewId}/hqdefault.jpg`}
+                      alt="YouTube Preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-xl">
+                        <Play size={20} className="fill-white ml-0.5" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Video Title */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                  Video Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={galleryForm.title}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })}
+                  placeholder="e.g. Modern Expressway Drone Tour or Bridge Construction"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4]"
+                />
+              </div>
+
+              {/* Category selector */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                    <Tag size={13} className="text-[#0066B4]" />
+                    <span>Category *</span>
+                  </label>
+                  {!isAddingNewGalleryCat && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingNewGalleryCat(true);
+                        setNewGalleryCatInput("");
+                      }}
+                      className="flex items-center gap-1 rounded-lg border border-[#0066B4]/30 bg-[#EDF5FA] px-2.5 py-1 text-[11px] font-semibold text-[#0066B4] shadow-sm transition hover:bg-[#0066B4] hover:text-white"
+                    >
+                      <Plus size={12} />
+                      <span>Add New Category</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Inline New Category Input */}
+                {isAddingNewGalleryCat && (
+                  <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#0066B4]/40 bg-[#EDF5FA]/90 p-2 shadow-sm">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newGalleryCatInput}
+                      onChange={(e) => setNewGalleryCatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddGalleryCategory();
+                        } else if (e.key === "Escape") {
+                          setIsAddingNewGalleryCat(false);
+                        }
+                      }}
+                      placeholder="e.g. Architecture, Renovation, Highways..."
+                      className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-[#0066B4]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddGalleryCategory}
+                      disabled={!newGalleryCatInput.trim()}
+                      className="flex items-center gap-1 rounded-lg bg-[#0066B4] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00528F] disabled:opacity-50"
+                    >
+                      <Check size={12} />
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewGalleryCat(false)}
+                      className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 hover:bg-slate-50"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Category Chips */}
+                <div className="flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-2.5">
+                  {allGalleryCategories.map((cat) => {
+                    const isSelected = galleryForm.category === cat;
+                    const isCustom = !DEFAULT_GALLERY_CATS.includes(cat);
+                    return (
+                      <div
+                        key={cat}
+                        className={`group flex items-center rounded-xl transition ${
+                          isSelected
+                            ? "bg-[#0066B4] text-white shadow-sm shadow-[#0066B4]/25 ring-2 ring-[#0066B4]/20"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-[#0066B4]/40 hover:bg-white"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setGalleryForm((prev) => ({ ...prev, category: cat }))}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium"
+                        >
+                          {isSelected && <Check size={12} className="stroke-[2.5]" />}
+                          <span>{cat}</span>
+                        </button>
+                        {isCustom && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveGalleryCategory(cat);
+                            }}
+                            className={`mr-1.5 flex h-4 w-4 items-center justify-center rounded-full transition ${
+                              isSelected ? "text-white/70 hover:bg-white/20 hover:text-white" : "text-slate-400 hover:bg-red-50 hover:text-red-500"
+                            }`}
+                          >
+                            <X size={11} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col-reverse justify-end gap-2 pt-2 sm:flex-row sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryModalOpen(false)}
+                  className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!youtubePreviewId}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                  <span>Save YouTube Video</span>
+                </button>
+              </div>
+            </form>
+          )}
           </div>
         </div>
       )}

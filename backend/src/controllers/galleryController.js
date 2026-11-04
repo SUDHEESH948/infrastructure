@@ -75,13 +75,18 @@ export const createGalleryItem = async (req, res) => {
 
       const timestamp = Date.now();
       const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url);
-      const formattedItems = validItems.map((it, idx) => ({
-        galleryId: it.galleryId || `gal_${timestamp}_${idx}`,
-        title: it.title || req.body.title || `Gallery Item ${idx + 1}`,
-        category: it.category || req.body.category || "Infrastructure",
-        image: it.image,
-        mediaType: it.mediaType || (isVideoUrl(it.image) ? "video" : "image"),
-      }));
+      const formattedItems = validItems.map((it, idx) => {
+        const isYT = it.mediaType === "youtube" || !!it.youtubeUrl || /youtube\.com|youtu\.be/i.test(it.image || "");
+        const isVid = !isYT && (it.mediaType === "video" || isVideoUrl(it.image));
+        return {
+          galleryId: it.galleryId || `gal_${timestamp}_${idx}`,
+          title: it.title || req.body.title || `Gallery Item ${idx + 1}`,
+          category: it.category || req.body.category || "Infrastructure",
+          image: it.image,
+          mediaType: isYT ? "youtube" : isVid ? "video" : "image",
+          youtubeUrl: it.youtubeUrl || "",
+        };
+      });
 
       if (mongoose.connection.readyState === 1) {
         const created = await Gallery.insertMany(formattedItems);
@@ -103,7 +108,7 @@ export const createGalleryItem = async (req, res) => {
       });
     }
 
-    const { title, category, image } = req.body;
+    const { title, category, image, youtubeUrl } = req.body;
 
     if (!title || !image) {
       return res.status(400).json({
@@ -114,7 +119,8 @@ export const createGalleryItem = async (req, res) => {
 
     const galleryId = req.body.galleryId || `gal_${Date.now()}`;
     const isVideoUrl = (url) => /\.(mp4|webm|mov|mkv|ogg|avi)(\?.*)?$/i.test(url);
-    const mediaType = req.body.mediaType || (isVideoUrl(image) ? "video" : "image");
+    const isYT = req.body.mediaType === "youtube" || !!youtubeUrl || /youtube\.com|youtu\.be/i.test(image || "");
+    const mediaType = isYT ? "youtube" : req.body.mediaType || (isVideoUrl(image) ? "video" : "image");
 
     if (mongoose.connection.readyState === 1) {
       const item = await Gallery.create({
@@ -123,6 +129,7 @@ export const createGalleryItem = async (req, res) => {
         category: category || "Infrastructure",
         image,
         mediaType,
+        youtubeUrl: youtubeUrl || "",
       });
       // Also update in-memory cache
       inMemoryGallery.unshift({
@@ -131,6 +138,7 @@ export const createGalleryItem = async (req, res) => {
         category: item.category,
         image: item.image,
         mediaType,
+        youtubeUrl: item.youtubeUrl || "",
       });
       return res.status(201).json({ success: true, source: "database", data: item });
     }
@@ -142,6 +150,7 @@ export const createGalleryItem = async (req, res) => {
       category: category || "Infrastructure",
       image,
       mediaType,
+      youtubeUrl: youtubeUrl || "",
       createdAt: new Date().toISOString(),
     };
     inMemoryGallery.unshift(newItem);

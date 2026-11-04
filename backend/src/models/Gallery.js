@@ -25,8 +25,13 @@ const gallerySchema = new mongoose.Schema(
     },
     mediaType: {
       type: String,
-      enum: ["image", "video"],
+      enum: ["image", "video", "youtube"],
       default: "image",
+    },
+    youtubeUrl: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   {
