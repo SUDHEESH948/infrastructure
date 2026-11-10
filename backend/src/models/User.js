@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
       default: "admin",
       lowercase: true,
       trim: true,
+      index: true,
     },
     email: {
       type: String,
@@ -19,6 +20,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
     password: {
       type: String,
@@ -27,6 +29,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "admin",
+      index: true,
     },
   },
   {

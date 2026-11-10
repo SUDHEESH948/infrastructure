@@ -11,30 +11,44 @@ const DEFAULT_ADMIN = {
   name: "Onset Infra Administrator",
 };
 
+// Fast memory cache for instant sub-millisecond authentication
+let cachedAdmin = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
 /**
- * Helper to fetch or initialize the Admin user document in MongoDB Atlas.
+ * Fast lookup helper with in-memory caching and lean MongoDB query.
  */
-const getOrInitAdmin = async () => {
+const getOrInitAdmin = async (forceRefresh = false) => {
+  if (!forceRefresh && cachedAdmin && Date.now() - lastCacheTime < CACHE_TTL_MS) {
+    return cachedAdmin;
+  }
+
   try {
-    let admin = await User.findOne({ role: "admin" });
+    let admin = await User.findOne({ role: "admin" }).lean();
     if (!admin) {
-      admin = await User.create({
+      const created = await User.create({
         name: DEFAULT_ADMIN.name,
         username: DEFAULT_ADMIN.username,
         email: DEFAULT_ADMIN.email,
         password: DEFAULT_ADMIN.password,
         role: "admin",
       });
+      admin = created.toObject();
       console.log(`[Auth] Created initial admin document in MongoDB: ${admin.email}`);
     }
+
+    cachedAdmin = admin;
+    lastCacheTime = Date.now();
     return admin;
   } catch (err) {
     console.error("[Auth] MongoDB admin lookup failed:", err.message);
+    if (cachedAdmin) return cachedAdmin;
     throw err;
   }
 };
 
-// @desc    Admin login - Strictly checks against MongoDB Atlas database
+// @desc    Fast Admin login - Verified against MongoDB Atlas
 // @route   POST /api/auth/login
 // @access  Public
 router.post("/login", async (req, res) => {
@@ -51,7 +65,7 @@ router.post("/login", async (req, res) => {
     const input = String(email).toLowerCase().trim();
     const inputPass = String(password).trim();
 
-    // Query MongoDB Atlas directly
+    // Fast lean query / cache hit
     const admin = await getOrInitAdmin();
 
     if (!admin) {
@@ -76,7 +90,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Successful authentication against MongoDB Atlas
+    // Authentication successful
     return res.status(200).json({
       success: true,
       message: "Admin authentication successful",
@@ -119,16 +133,20 @@ router.put("/update-credentials", async (req, res) => {
       });
     }
 
-    const admin = await getOrInitAdmin();
+    // Fetch full Mongoose document for updating
+    let admin = await User.findOne({ role: "admin" });
 
     if (!admin) {
-      return res.status(500).json({
-        success: false,
-        message: "Admin account not found in database.",
+      admin = await User.create({
+        name: DEFAULT_ADMIN.name,
+        username: DEFAULT_ADMIN.username,
+        email: DEFAULT_ADMIN.email,
+        password: DEFAULT_ADMIN.password,
+        role: "admin",
       });
     }
 
-    // Verify current password against MongoDB document (or allow default admin123 if recovering)
+    // Verify current password against MongoDB document (or default admin123 as recovery)
     const isCurrentValid =
       String(currentPassword).trim() === String(admin.password).trim() ||
       String(currentPassword).trim() === DEFAULT_ADMIN.password;
@@ -177,6 +195,10 @@ router.put("/update-credentials", async (req, res) => {
     }
 
     await admin.save();
+
+    // Invalidate cache immediately so new credentials apply instantly
+    cachedAdmin = null;
+    lastCacheTime = 0;
 
     console.log(`[Auth] Credentials updated in MongoDB for: ${admin.email}`);
 

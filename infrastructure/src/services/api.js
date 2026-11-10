@@ -148,33 +148,37 @@ export const deleteGalleryItemAPI = async (id) => {
 };
 
 /* =========================================================
-   AUTH API (Direct MongoDB Atlas Verification)
+   AUTH API (Fast Direct MongoDB Atlas Verification)
 ========================================================= */
 
 export const loginAdminAPI = async (email, password) => {
   let response;
 
-  // 1. Send authentication request to backend connected to MongoDB Atlas
-  try {
-    response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-  } catch (err) {
-    console.warn("Primary API URL unreachable, checking local proxy:", err.message);
-  }
+  const isLocalHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
-  // 2. If primary API failed to connect and API_BASE is not "/api", try local Vite dev proxy
-  if (!response && API_BASE !== "/api") {
+  // 1. In local dev, query local proxy first for instant sub-100ms response
+  if (isLocalHost) {
     try {
       response = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+    } catch {}
+  }
+
+  // 2. If not local or local server is offline, query primary cloud API
+  if (!response) {
+    try {
+      response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
     } catch (err) {
-      console.warn("Local API proxy unreachable:", err.message);
+      console.warn("Primary API unreachable:", err.message);
     }
   }
 
@@ -194,19 +198,12 @@ export const loginAdminAPI = async (email, password) => {
 export const updateAdminCredentialsAPI = async ({ currentPassword, newEmail, newPassword }) => {
   let response;
 
-  // 1. Send update request to MongoDB Atlas
-  try {
-    response = await fetch(`${API_BASE}/auth/update-credentials`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPassword, newEmail, newPassword }),
-    });
-  } catch (err) {
-    console.warn("Primary API URL unreachable, checking local proxy:", err.message);
-  }
+  const isLocalHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
-  // 2. Fallback to local dev proxy if primary network failed
-  if (!response && API_BASE !== "/api") {
+  // 1. In local dev, query local proxy first
+  if (isLocalHost) {
     try {
       response = await fetch(`/api/auth/update-credentials`, {
         method: "PUT",
@@ -214,6 +211,19 @@ export const updateAdminCredentialsAPI = async ({ currentPassword, newEmail, new
         body: JSON.stringify({ currentPassword, newEmail, newPassword }),
       });
     } catch {}
+  }
+
+  // 2. Query primary cloud API
+  if (!response) {
+    try {
+      response = await fetch(`${API_BASE}/auth/update-credentials`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newEmail, newPassword }),
+      });
+    } catch (err) {
+      console.warn("Primary API URL unreachable:", err.message);
+    }
   }
 
   // 3. Strictly enforce database update response
@@ -229,19 +239,23 @@ export const updateAdminCredentialsAPI = async ({ currentPassword, newEmail, new
 };
 
 export const fetchAdminProfileAPI = async () => {
+  const isLocalHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+  if (isLocalHost) {
+    try {
+      const res = await fetch(`/api/auth/me`);
+      if (res.ok) return await res.json();
+    } catch {}
+  }
+
   try {
     const response = await fetch(`${API_BASE}/auth/me`);
     if (response.ok) {
       return await response.json();
     }
   } catch (err) {}
-
-  try {
-    if (API_BASE !== "/api") {
-      const localRes = await fetch(`/api/auth/me`);
-      if (localRes.ok) return await localRes.json();
-    }
-  } catch {}
 
   return null;
 };
