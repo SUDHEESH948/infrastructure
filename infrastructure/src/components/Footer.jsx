@@ -200,7 +200,7 @@ const Footer = () => {
                   <div className="flex items-center gap-1.5 sm:gap-2.5">
                     {/* Instagram */}
                     <a
-                      href="https://instagram.com"
+                      href="https://www.instagram.com/onset.infra?rpxt=cXl2Z2h6dzFtd2p1"
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Instagram"
@@ -213,7 +213,7 @@ const Footer = () => {
 
                     {/* Facebook */}
                     <a
-                      href="https://facebook.com"
+                      href="https://www.facebook.com/share/1FWoJMrVka/?mibextid=wwXIfr"
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Facebook"
@@ -239,7 +239,7 @@ const Footer = () => {
 
                     {/* Threads */}
                     <a
-                      href="https://threads.net"
+                      href="https://www.threads.net/@onset.infra"
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Threads"

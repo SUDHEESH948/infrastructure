@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const WHATSAPP_URL =
   "https://wa.me/917559034444?text=Hello%20ONSET%20INFRA,%20I%20would%20like%20to%20inquire%20about%20your%20services.";
-const FACEBOOK_URL = "https://facebook.com";
-const INSTAGRAM_URL = "https://instagram.com";
+const FACEBOOK_URL = "https://www.facebook.com/share/1FWoJMrVka/?mibextid=wwXIfr";
+const INSTAGRAM_URL = "https://www.instagram.com/onset.infra?rpxt=cXl2Z2h6dzFtd2p1";
 
 // Particle directions for bubble burst (compact radial scatter)
 const BURST_PARTICLES = Array.from({ length: 8 }).map((_, i) => {
