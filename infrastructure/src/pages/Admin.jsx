@@ -1163,28 +1163,16 @@ export default function Admin() {
             </button>
           </form>
 
-          {/* CHANGE / RESET CREDENTIALS ACTION ON LOGIN SCREEN */}
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-            <button
-              type="button"
-              onClick={openCredsModal}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0066B4] hover:text-[#00528F] hover:underline"
-            >
-              <Key size={13} />
-              <span>Change / Reset Credentials</span>
-            </button>
+          <div className="mt-5 text-center">
             <Link
               to="/"
-              className="inline-flex items-center gap-1 text-xs text-slate-500 transition hover:text-[#0066B4]"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 transition hover:text-[#0066B4]"
             >
-              <ArrowLeft size={13} />
-              <span>Public Site</span>
+              <ArrowLeft size={14} />
+              Back to Public Website
             </Link>
           </div>
         </motion.div>
-
-        {/* MODAL CAN BE OPENED DIRECTLY ON LOGIN SCREEN */}
-        {renderCredsModal()}
       </div>
     );
   }
