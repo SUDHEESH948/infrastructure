@@ -13,8 +13,8 @@ import AboutUs from "./pages/AboutUs";
 import Services from "./pages/Services";
 import Admin from "./pages/Admin";
 
-// Automatically scroll to the top of the page on route/page change
-function ScrollToTop() {
+// Automatically scroll to the top of the page and update document title on route/page change
+function PageMetaTracker() {
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -23,6 +23,17 @@ function ScrollToTop() {
       left: 0,
       behavior: "instant",
     });
+
+    const routeTitles = {
+      "/": "Onset Infra",
+      "/services": "Services | Onset Infra",
+      "/projects": "Projects | Onset Infra",
+      "/about": "About Us | Onset Infra",
+      "/contact": "Contact Us | Onset Infra",
+      "/admin": "Admin | Onset Infra",
+    };
+
+    document.title = routeTitles[pathname] || "Onset Infra";
   }, [pathname]);
 
   return null;
@@ -34,7 +45,7 @@ function AppContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <ScrollToTop />
+      <PageMetaTracker />
       {/* Hide public navigation and footer on Admin routes */}
       {!isAdmin && <Navigation />}
 
