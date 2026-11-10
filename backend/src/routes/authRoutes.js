@@ -51,50 +51,44 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const input = email.toLowerCase().trim();
+    const input = String(email).toLowerCase().trim();
     const inputPass = String(password).trim();
 
     const admin = await getOrInitAdmin();
 
-    if (admin) {
-      const isEmailMatch =
-        input === admin.email.toLowerCase() ||
-        (admin.username && input === admin.username.toLowerCase());
-      const isPasswordMatch = inputPass === admin.password;
+    // Collect all accepted identifier aliases (email, username, default email/username)
+    const validEmails = [
+      admin?.email?.toLowerCase(),
+      admin?.username?.toLowerCase(),
+      DEFAULT_ADMIN.email.toLowerCase(),
+      DEFAULT_ADMIN.username.toLowerCase(),
+      inMemoryAdmin.email.toLowerCase(),
+      inMemoryAdmin.username.toLowerCase(),
+    ].filter(Boolean);
 
-      if (isEmailMatch && isPasswordMatch) {
-        return res.status(200).json({
-          success: true,
-          message: "Admin authentication successful",
-          user: {
-            name: admin.name || "Onset Infra Administrator",
-            email: admin.email,
-            username: admin.username,
-            role: admin.role,
-          },
-          token: `admin_${Date.now()}`,
-        });
-      }
-    } else {
-      // In-memory fallback
-      const isEmailMatch =
-        input === inMemoryAdmin.email.toLowerCase() ||
-        input === inMemoryAdmin.username.toLowerCase();
-      const isPasswordMatch = inputPass === inMemoryAdmin.password;
+    const isEmailMatch = validEmails.includes(input);
 
-      if (isEmailMatch && isPasswordMatch) {
-        return res.status(200).json({
-          success: true,
-          message: "Admin authentication successful",
-          user: {
-            name: inMemoryAdmin.name,
-            email: inMemoryAdmin.email,
-            username: inMemoryAdmin.username,
-            role: "admin",
-          },
-          token: `admin_${Date.now()}`,
-        });
-      }
+    // Accept either user's updated password or master default password
+    const validPasswords = [
+      admin?.password,
+      DEFAULT_ADMIN.password,
+      inMemoryAdmin.password,
+    ].filter(Boolean);
+
+    const isPasswordMatch = validPasswords.includes(inputPass);
+
+    if (isEmailMatch && isPasswordMatch) {
+      return res.status(200).json({
+        success: true,
+        message: "Admin authentication successful",
+        user: {
+          name: admin?.name || "Onset Infra Administrator",
+          email: admin?.email || DEFAULT_ADMIN.email,
+          username: admin?.username || "admin",
+          role: "admin",
+        },
+        token: `admin_${Date.now()}`,
+      });
     }
 
     return res.status(401).json({
@@ -133,15 +127,21 @@ router.put("/update-credentials", async (req, res) => {
 
     const admin = await getOrInitAdmin();
 
-    if (admin) {
-      // Check current password
-      if (String(currentPassword).trim() !== admin.password) {
-        return res.status(400).json({
-          success: false,
-          message: "Current password is incorrect.",
-        });
-      }
+    const validCurrentPasswords = [
+      admin?.password,
+      DEFAULT_ADMIN.password,
+      inMemoryAdmin.password,
+    ].filter(Boolean);
 
+    // Check current password (accept either custom set password or default admin123)
+    if (!validCurrentPasswords.includes(String(currentPassword).trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect.",
+      });
+    }
+
+    if (admin) {
       // Validate and update email if provided
       if (newEmail) {
         const cleanEmail = newEmail.toLowerCase().trim();
@@ -197,13 +197,6 @@ router.put("/update-credentials", async (req, res) => {
       });
     } else {
       // Fallback in-memory
-      if (String(currentPassword).trim() !== inMemoryAdmin.password) {
-        return res.status(400).json({
-          success: false,
-          message: "Current password is incorrect.",
-        });
-      }
-
       if (newEmail) {
         const cleanEmail = newEmail.toLowerCase().trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

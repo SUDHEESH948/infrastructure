@@ -86,6 +86,7 @@ export default function Admin() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Active Tab: "projects" | "gallery"
   const [activeTab, setActiveTab] = useState("projects");
@@ -646,6 +647,8 @@ export default function Admin() {
         localStorage.setItem("onset_admin_user", JSON.stringify(updatedUser));
         showNotification("Admin credentials updated successfully!");
         setIsCredsModalOpen(false);
+        if (credsForm.newEmail) setLoginEmail(credsForm.newEmail);
+        if (credsForm.newPassword) setLoginPassword(credsForm.newPassword);
       }
     } catch (err) {
       setCredsError(err.message || "Failed to update admin credentials.");
@@ -890,6 +893,177 @@ export default function Admin() {
   });
 
   /* =========================================================
+     CREDENTIALS UPDATE MODAL (Accessible on Login & Dashboard)
+  ========================================================= */
+  const renderCredsModal = () => {
+    if (!isCredsModalOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-sm overflow-y-auto">
+        <div className="relative w-full max-w-md rounded-3xl bg-white p-5 sm:p-7 shadow-2xl transition-all">
+          <button
+            type="button"
+            onClick={() => setIsCredsModalOpen(false)}
+            className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 sm:right-6 sm:top-6"
+          >
+            <X size={18} />
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0066B4]/10 text-[#0066B4]">
+              <Shield size={22} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Admin Credentials</h3>
+              <p className="text-xs text-slate-500">Update or reset your login email ID and password</p>
+            </div>
+          </div>
+
+          {credsError && (
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{credsError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleUpdateCredentials} className="mt-5 space-y-4">
+            {/* Current Password (Required for confirmation) */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Current Password <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  required
+                  placeholder="Enter current password (default: admin123)"
+                  value={credsForm.currentPassword}
+                  onChange={(e) =>
+                    setCredsForm({ ...credsForm, currentPassword: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  title={showCurrentPassword ? "Hide password" : "Show password"}
+                >
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              <span className="text-[11px] text-slate-400">Required to authorize credential changes (or master: admin123)</span>
+            </div>
+
+            {/* New Email */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Login Email ID
+              </label>
+              <div className="relative">
+                <User size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  placeholder="admin@onsetinfra.com"
+                  value={credsForm.newEmail}
+                  onChange={(e) =>
+                    setCredsForm({ ...credsForm, newEmail: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                />
+              </div>
+              <span className="text-[11px] text-slate-400">The email address you will use to log in</span>
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                New Password <span className="text-slate-400 font-normal lowercase">(leave blank to keep current)</span>
+              </label>
+              <div className="relative">
+                <Key size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password (optional)"
+                  value={credsForm.newPassword}
+                  onChange={(e) =>
+                    setCredsForm({ ...credsForm, newPassword: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  title={showNewPassword ? "Hide password" : "Show password"}
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm New Password */}
+            {credsForm.newPassword && (
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  Confirm New Password <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Key size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required={!!credsForm.newPassword}
+                    placeholder="Re-enter new password"
+                    value={credsForm.confirmPassword}
+                    onChange={(e) =>
+                      setCredsForm({ ...credsForm, confirmPassword: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col-reverse justify-end gap-2 pt-3 sm:flex-row sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setIsCredsModalOpen(false)}
+                className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={credsLoading}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/25 hover:bg-[#00528F] active:scale-[0.99] disabled:opacity-50 transition"
+              >
+                {credsLoading ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Credentials"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  /* =========================================================
      LOGIN SCREEN (Default Admin Page)
   ========================================================= */
   if (!isAuthenticated) {
@@ -952,13 +1126,21 @@ export default function Admin() {
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
                 <input
-                  type="password"
+                  type={showLoginPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-4 text-xs sm:text-sm text-slate-900 outline-none transition-all focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-3 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none transition-all focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  title={showLoginPassword ? "Hide password" : "Show password"}
+                >
+                  {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -978,17 +1160,28 @@ export default function Admin() {
             </button>
           </form>
 
-
-          <div className="mt-5 text-center">
+          {/* CHANGE / RESET CREDENTIALS ACTION ON LOGIN SCREEN */}
+          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+            <button
+              type="button"
+              onClick={openCredsModal}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0066B4] hover:text-[#00528F] hover:underline"
+            >
+              <Key size={13} />
+              <span>Change / Reset Credentials</span>
+            </button>
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-500 transition hover:text-[#0066B4]"
+              className="inline-flex items-center gap-1 text-xs text-slate-500 transition hover:text-[#0066B4]"
             >
-              <ArrowLeft size={14} />
-              Back to Public Website
+              <ArrowLeft size={13} />
+              <span>Public Site</span>
             </Link>
           </div>
         </motion.div>
+
+        {/* MODAL CAN BE OPENED DIRECTLY ON LOGIN SCREEN */}
+        {renderCredsModal()}
       </div>
     );
   }
@@ -2346,170 +2539,7 @@ export default function Admin() {
       {/* =====================================================
           UPDATE ADMIN CREDENTIALS MODAL
       ===================================================== */}
-      {isCredsModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-md rounded-3xl bg-white p-5 sm:p-7 shadow-2xl transition-all">
-            <button
-              type="button"
-              onClick={() => setIsCredsModalOpen(false)}
-              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 sm:right-6 sm:top-6"
-            >
-              <X size={18} />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0066B4]/10 text-[#0066B4]">
-                <Shield size={22} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Admin Credentials</h3>
-                <p className="text-xs text-slate-500">Update your login email ID and password</p>
-              </div>
-            </div>
-
-            {credsError && (
-              <div className="mt-4 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{credsError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateCredentials} className="mt-5 space-y-4">
-              {/* Current Password (Required for confirmation) */}
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                  Current Password <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
-                  <input
-                    type={showCurrentPassword ? "text" : "password"}
-                    required
-                    placeholder="Enter current password"
-                    value={credsForm.currentPassword}
-                    onChange={(e) =>
-                      setCredsForm({ ...credsForm, currentPassword: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                    title={showCurrentPassword ? "Hide password" : "Show password"}
-                  >
-                    {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                <span className="text-[11px] text-slate-400">Required to authorize credential changes</span>
-              </div>
-
-              {/* New Email */}
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                  Login Email ID
-                </label>
-                <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="admin@onsetinfra.com"
-                    value={credsForm.newEmail}
-                    onChange={(e) =>
-                      setCredsForm({ ...credsForm, newEmail: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
-                  />
-                </div>
-                <span className="text-[11px] text-slate-400">The email address you will use to log in</span>
-              </div>
-
-              {/* New Password */}
-              <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                  New Password <span className="text-slate-400 font-normal lowercase">(leave blank to keep current)</span>
-                </label>
-                <div className="relative">
-                  <Key size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="Enter new password (optional)"
-                    value={credsForm.newPassword}
-                    onChange={(e) =>
-                      setCredsForm({ ...credsForm, newPassword: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                    title={showNewPassword ? "Hide password" : "Show password"}
-                  >
-                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm New Password */}
-              {credsForm.newPassword && (
-                <div>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                    Confirm New Password <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Key size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      required={!!credsForm.newPassword}
-                      placeholder="Re-enter new password"
-                      value={credsForm.confirmPassword}
-                      onChange={(e) =>
-                        setCredsForm({ ...credsForm, confirmPassword: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
-                      title={showConfirmPassword ? "Hide password" : "Show password"}
-                    >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-col-reverse justify-end gap-2 pt-3 sm:flex-row sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCredsModalOpen(false)}
-                  className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={credsLoading}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/25 hover:bg-[#00528F] active:scale-[0.99] disabled:opacity-50 transition"
-                >
-                  {credsLoading ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Credentials"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {renderCredsModal()}
     </div>
   );
 }

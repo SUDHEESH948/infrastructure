@@ -237,6 +237,20 @@ const Footer = () => {
                       </svg>
                     </a>
 
+                    {/* Threads */}
+                    <a
+                      href="https://threads.net"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Threads"
+                      title="Follow ONSET INFRA on Threads"
+                      className="flex h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 items-center justify-center rounded-xl sm:rounded-2xl bg-white/10 text-white backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white hover:text-[#0066B4] shadow-md border border-white/15"
+                    >
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12.186 24C5.467 24 0 18.533 0 11.814 0 5.095 5.467 0 12.186 0c3.96 0 7.426 1.868 9.61 4.792l-2.43 1.768C17.65 4.38 15.08 3.01 12.186 3.01c-4.857 0-8.804 3.947-8.804 8.804 0 4.857 3.947 8.804 8.804 8.804 3.91 0 6.942-2.316 7.828-5.834h-7.828v-3.003h10.963c.094.636.142 1.294.142 1.97 0 6.43-4.57 10.249-11.105 10.249z"/>
+                      </svg>
+                    </a>
+
                     {/* WhatsApp */}
                     <a
                       href="https://wa.me/917559034444"
