@@ -3,16 +3,13 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// Default admin credentials (fallback if database is not yet initialized)
+// Default admin credentials (used only if database is completely empty on initial setup)
 const DEFAULT_ADMIN = {
   email: (process.env.ADMIN_EMAIL || "admin@onsetinfra.com").toLowerCase().trim(),
   password: (process.env.ADMIN_PASSWORD || "admin123").trim(),
   username: "admin",
   name: "Onset Infra Administrator",
 };
-
-// In-memory fallback in case MongoDB Atlas is temporarily unreachable
-let inMemoryAdmin = { ...DEFAULT_ADMIN };
 
 /**
  * Helper to fetch or initialize the Admin user document in MongoDB Atlas.
@@ -28,16 +25,16 @@ const getOrInitAdmin = async () => {
         password: DEFAULT_ADMIN.password,
         role: "admin",
       });
-      console.log(`[Auth] Initialized default admin in MongoDB: ${admin.email}`);
+      console.log(`[Auth] Created initial admin document in MongoDB: ${admin.email}`);
     }
     return admin;
   } catch (err) {
-    console.warn("[Auth] MongoDB query failed, using in-memory state:", err.message);
-    return null;
+    console.error("[Auth] MongoDB admin lookup failed:", err.message);
+    throw err;
   }
 };
 
-// @desc    Admin login
+// @desc    Admin login - Strictly checks against MongoDB Atlas database
 // @route   POST /api/auth/login
 // @access  Public
 router.post("/login", async (req, res) => {
@@ -47,64 +44,61 @@ router.post("/login", async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Please provide email/username and password.",
+        message: "Please provide both email/username and password.",
       });
     }
 
     const input = String(email).toLowerCase().trim();
     const inputPass = String(password).trim();
 
+    // Query MongoDB Atlas directly
     const admin = await getOrInitAdmin();
 
-    // Collect all accepted identifier aliases (email, username, default email/username)
-    const validEmails = [
-      admin?.email?.toLowerCase(),
-      admin?.username?.toLowerCase(),
-      DEFAULT_ADMIN.email.toLowerCase(),
-      DEFAULT_ADMIN.username.toLowerCase(),
-      inMemoryAdmin.email.toLowerCase(),
-      inMemoryAdmin.username.toLowerCase(),
-    ].filter(Boolean);
-
-    const isEmailMatch = validEmails.includes(input);
-
-    // Accept either user's updated password or master default password
-    const validPasswords = [
-      admin?.password,
-      DEFAULT_ADMIN.password,
-      inMemoryAdmin.password,
-    ].filter(Boolean);
-
-    const isPasswordMatch = validPasswords.includes(inputPass);
-
-    if (isEmailMatch && isPasswordMatch) {
-      return res.status(200).json({
-        success: true,
-        message: "Admin authentication successful",
-        user: {
-          name: admin?.name || "Onset Infra Administrator",
-          email: admin?.email || DEFAULT_ADMIN.email,
-          username: admin?.username || "admin",
-          role: "admin",
-        },
-        token: `admin_${Date.now()}`,
+    if (!admin) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin account not found in database.",
       });
     }
 
-    return res.status(401).json({
-      success: false,
-      message: "Invalid email/username or password.",
+    // Check email or username match against MongoDB document
+    const isEmailMatch =
+      input === admin.email.toLowerCase().trim() ||
+      (admin.username && input === admin.username.toLowerCase().trim());
+
+    // Check password match against MongoDB document
+    const isPasswordMatch = inputPass === String(admin.password).trim();
+
+    if (!isEmailMatch || !isPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email/username or password.",
+      });
+    }
+
+    // Successful authentication against MongoDB Atlas
+    return res.status(200).json({
+      success: true,
+      message: "Admin authentication successful",
+      user: {
+        id: admin._id,
+        name: admin.name || "Onset Infra Administrator",
+        email: admin.email,
+        username: admin.username,
+        role: admin.role,
+      },
+      token: `admin_${Date.now()}`,
     });
   } catch (error) {
-    console.error("Login route error:", error);
+    console.error("Login database error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error during login authentication.",
+      message: "Database connection error during login. Please try again.",
     });
   }
 });
 
-// @desc    Update admin email and/or password
+// @desc    Update admin email and/or password directly in MongoDB Atlas
 // @route   PUT /api/auth/update-credentials
 // @access  Public / Admin
 router.put("/update-credentials", async (req, res) => {
@@ -121,126 +115,92 @@ router.put("/update-credentials", async (req, res) => {
     if (!newEmail && !newPassword) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a new email or a new password to update.",
+        message: "Please enter a new email or a new password to update in database.",
       });
     }
 
     const admin = await getOrInitAdmin();
 
-    const validCurrentPasswords = [
-      admin?.password,
-      DEFAULT_ADMIN.password,
-      inMemoryAdmin.password,
-    ].filter(Boolean);
+    if (!admin) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin account not found in database.",
+      });
+    }
 
-    // Check current password (accept either custom set password or default admin123)
-    if (!validCurrentPasswords.includes(String(currentPassword).trim())) {
+    // Verify current password against MongoDB document (or allow default admin123 if recovering)
+    const isCurrentValid =
+      String(currentPassword).trim() === String(admin.password).trim() ||
+      String(currentPassword).trim() === DEFAULT_ADMIN.password;
+
+    if (!isCurrentValid) {
       return res.status(400).json({
         success: false,
         message: "Current password is incorrect.",
       });
     }
 
-    if (admin) {
-      // Validate and update email if provided
-      if (newEmail) {
-        const cleanEmail = newEmail.toLowerCase().trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(cleanEmail)) {
-          return res.status(400).json({
-            success: false,
-            message: "Please provide a valid email address.",
-          });
-        }
-
-        // Check if taken by another user
-        const existing = await User.findOne({
-          email: cleanEmail,
-          _id: { $ne: admin._id },
+    // Update email in MongoDB
+    if (newEmail) {
+      const cleanEmail = newEmail.toLowerCase().trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: "Please provide a valid email address.",
         });
-        if (existing) {
-          return res.status(400).json({
-            success: false,
-            message: "This email address is already in use.",
-          });
-        }
-        admin.email = cleanEmail;
       }
 
-      // Validate and update password if provided
-      if (newPassword) {
-        const cleanPassword = String(newPassword).trim();
-        if (cleanPassword.length < 4) {
-          return res.status(400).json({
-            success: false,
-            message: "New password must be at least 4 characters.",
-          });
-        }
-        admin.password = cleanPassword;
-      }
-
-      await admin.save();
-
-      // Sync memory state
-      inMemoryAdmin.email = admin.email;
-      inMemoryAdmin.password = admin.password;
-
-      return res.status(200).json({
-        success: true,
-        message: "Admin credentials successfully updated.",
-        user: {
-          name: admin.name,
-          email: admin.email,
-          username: admin.username,
-          role: admin.role,
-        },
+      const existing = await User.findOne({
+        email: cleanEmail,
+        _id: { $ne: admin._id },
       });
-    } else {
-      // Fallback in-memory
-      if (newEmail) {
-        const cleanEmail = newEmail.toLowerCase().trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(cleanEmail)) {
-          return res.status(400).json({
-            success: false,
-            message: "Please provide a valid email address.",
-          });
-        }
-        inMemoryAdmin.email = cleanEmail;
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: "This email address is already in use by another user.",
+        });
       }
-
-      if (newPassword) {
-        const cleanPassword = String(newPassword).trim();
-        if (cleanPassword.length < 4) {
-          return res.status(400).json({
-            success: false,
-            message: "New password must be at least 4 characters.",
-          });
-        }
-        inMemoryAdmin.password = cleanPassword;
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: "Admin credentials updated successfully.",
-        user: {
-          name: inMemoryAdmin.name,
-          email: inMemoryAdmin.email,
-          username: inMemoryAdmin.username,
-          role: "admin",
-        },
-      });
+      admin.email = cleanEmail;
     }
+
+    // Update password in MongoDB
+    if (newPassword) {
+      const cleanPassword = String(newPassword).trim();
+      if (cleanPassword.length < 4) {
+        return res.status(400).json({
+          success: false,
+          message: "New password must be at least 4 characters long.",
+        });
+      }
+      admin.password = cleanPassword;
+    }
+
+    await admin.save();
+
+    console.log(`[Auth] Credentials updated in MongoDB for: ${admin.email}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin credentials successfully updated in MongoDB database.",
+      user: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        username: admin.username,
+        role: admin.role,
+      },
+    });
   } catch (error) {
-    console.error("Update credentials error:", error);
+    console.error("Update credentials database error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to update admin credentials.",
+      message: error.message || "Failed to update admin credentials in database.",
     });
   }
 });
 
-// @desc    Get current admin profile info
+// @desc    Get current admin profile directly from MongoDB Atlas
 // @route   GET /api/auth/me
 // @access  Public / Admin
 router.get("/me", async (req, res) => {
@@ -250,6 +210,7 @@ router.get("/me", async (req, res) => {
       return res.status(200).json({
         success: true,
         user: {
+          id: admin._id,
           name: admin.name,
           email: admin.email,
           username: admin.username,
@@ -257,19 +218,14 @@ router.get("/me", async (req, res) => {
         },
       });
     }
-    return res.status(200).json({
-      success: true,
-      user: {
-        name: inMemoryAdmin.name,
-        email: inMemoryAdmin.email,
-        username: inMemoryAdmin.username,
-        role: "admin",
-      },
+    return res.status(404).json({
+      success: false,
+      message: "Admin not found in database.",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Failed to get admin profile.",
+      message: "Failed to get admin profile from database.",
     });
   }
 });

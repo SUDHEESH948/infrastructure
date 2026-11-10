@@ -148,21 +148,13 @@ export const deleteGalleryItemAPI = async (id) => {
 };
 
 /* =========================================================
-   AUTH API
+   AUTH API (Direct MongoDB Atlas Verification)
 ========================================================= */
 
 export const loginAdminAPI = async (email, password) => {
-  let customCreds = null;
-  try {
-    customCreds = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "null");
-  } catch {}
-
-  const validEmail = (customCreds?.email || "admin@onsetinfra.com").toLowerCase().trim();
-  const validPassword = String(customCreds?.password || "admin123").trim();
-  const inputEmail = String(email || "").toLowerCase().trim();
-  const inputPass = String(password || "").trim();
-
   let response;
+
+  // 1. Send authentication request to backend connected to MongoDB Atlas
   try {
     response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
@@ -170,60 +162,39 @@ export const loginAdminAPI = async (email, password) => {
       body: JSON.stringify({ email, password }),
     });
   } catch (err) {
-    console.warn("Remote backend auth offline:", err.message);
+    console.warn("Primary API URL unreachable, checking local proxy:", err.message);
   }
 
-  // If remote failed and API_BASE is not "/api", try local Vite dev proxy
-  if ((!response || !response.ok) && API_BASE !== "/api") {
+  // 2. If primary API failed to connect and API_BASE is not "/api", try local Vite dev proxy
+  if (!response && API_BASE !== "/api") {
     try {
-      const localRes = await fetch(`/api/auth/login`, {
+      response = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (localRes.ok) {
-        response = localRes;
-      }
-    } catch {}
-  }
-
-  if (response && response.ok) {
-    const data = await response.json().catch(() => ({}));
-    if (data?.success) {
-      return data;
+    } catch (err) {
+      console.warn("Local API proxy unreachable:", err.message);
     }
   }
 
-  // Fallback to client-side custom credentials or default credentials
-  const isMatch =
-    (inputEmail === validEmail || inputEmail === "admin" || inputEmail === "admin@onsetinfra.com") &&
-    (inputPass === validPassword || inputPass === "admin123" || inputPass === "kssudheesh818@gmail.com");
-
-  if (isMatch) {
-    return {
-      success: true,
-      message: "Admin authentication successful",
-      user: {
-        name: "Onset Infra Administrator",
-        email: customCreds?.email || (inputEmail.includes("@") ? inputEmail : "admin@onsetinfra.com"),
-        role: "admin",
-      },
-      token: `admin_${Date.now()}`,
-    };
-  }
-
+  // 3. Strictly enforce database response
   if (response) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.message || "Invalid username/email or password.");
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data?.success) {
+      return data;
+    }
+    // Directly surface the MongoDB database verification error
+    throw new Error(data?.message || "Invalid email/username or password.");
   }
 
-  throw new Error("Invalid username/email or password.");
+  throw new Error("Unable to connect to database server. Please check your internet connection.");
 };
 
 export const updateAdminCredentialsAPI = async ({ currentPassword, newEmail, newPassword }) => {
   let response;
 
-  // 1. Try remote API_BASE
+  // 1. Send update request to MongoDB Atlas
   try {
     response = await fetch(`${API_BASE}/auth/update-credentials`, {
       method: "PUT",
@@ -231,86 +202,30 @@ export const updateAdminCredentialsAPI = async ({ currentPassword, newEmail, new
       body: JSON.stringify({ currentPassword, newEmail, newPassword }),
     });
   } catch (err) {
-    console.warn("Remote auth endpoint unreachable:", err.message);
+    console.warn("Primary API URL unreachable, checking local proxy:", err.message);
   }
 
-  // 2. If remote returned 404 (endpoint not deployed to cloud server yet), try local Vite dev server
-  if ((!response || response.status === 404) && API_BASE !== "/api") {
+  // 2. Fallback to local dev proxy if primary network failed
+  if (!response && API_BASE !== "/api") {
     try {
-      const localRes = await fetch(`/api/auth/update-credentials`, {
+      response = await fetch(`/api/auth/update-credentials`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newEmail, newPassword }),
       });
-      if (localRes.ok || localRes.status !== 404) {
-        response = localRes;
-      }
     } catch {}
   }
 
-  // 3. Handle response if endpoint exists
+  // 3. Strictly enforce database update response
   if (response) {
-    if (response.ok) {
-      const data = await response.json().catch(() => ({}));
-      if (data?.success) {
-        try {
-          const saved = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "{}");
-          if (newEmail) saved.email = newEmail.toLowerCase().trim();
-          if (newPassword) saved.password = newPassword.trim();
-          localStorage.setItem("onset_admin_custom_creds", JSON.stringify(saved));
-        } catch {}
-        return data;
-      }
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data?.success) {
+      return data;
     }
-
-    // If server returned 400 (e.g. incorrect current password or invalid email), surface that error!
-    if (response.status !== 404) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || "Failed to update admin credentials.");
-    }
+    throw new Error(data?.message || "Failed to update admin credentials in database.");
   }
 
-  // 4. Fallback if cloud endpoint is not yet deployed (404) or server is offline
-  let saved = {};
-  try {
-    saved = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "{}");
-  } catch {}
-
-  const expectedPass = String(saved.password || "admin123").trim();
-  const inputPass = String(currentPassword || "").trim();
-
-  if (inputPass !== expectedPass && inputPass !== "admin123" && inputPass !== "kssudheesh818@gmail.com") {
-    throw new Error("Current password is incorrect.");
-  }
-
-  if (newEmail) {
-    const cleanEmail = newEmail.toLowerCase().trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      throw new Error("Please enter a valid email address.");
-    }
-    saved.email = cleanEmail;
-  }
-
-  if (newPassword) {
-    const cleanPassword = String(newPassword).trim();
-    if (cleanPassword.length < 4) {
-      throw new Error("New password must be at least 4 characters long.");
-    }
-    saved.password = cleanPassword;
-  }
-
-  localStorage.setItem("onset_admin_custom_creds", JSON.stringify(saved));
-
-  return {
-    success: true,
-    message: "Admin credentials successfully updated.",
-    user: {
-      name: "Onset Infra Administrator",
-      email: saved.email || newEmail || "admin@onsetinfra.com",
-      role: "admin",
-    },
-  };
+  throw new Error("Unable to connect to database server. Please check your internet connection.");
 };
 
 export const fetchAdminProfileAPI = async () => {
@@ -328,21 +243,6 @@ export const fetchAdminProfileAPI = async () => {
     }
   } catch {}
 
-  let customCreds = null;
-  try {
-    customCreds = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "null");
-  } catch {}
-
-  if (customCreds?.email) {
-    return {
-      success: true,
-      user: {
-        name: "Onset Infra Administrator",
-        email: customCreds.email,
-        role: "admin",
-      },
-    };
-  }
   return null;
 };
 

@@ -498,6 +498,9 @@ export default function Admin() {
 
   // Check saved login on mount
   useEffect(() => {
+    // Clear any legacy client-side fallback credentials so auth relies purely on MongoDB Atlas
+    localStorage.removeItem("onset_admin_custom_creds");
+
     const savedToken = localStorage.getItem("onset_admin_token");
     const savedUser = localStorage.getItem("onset_admin_user");
     if (savedToken && savedUser) {
