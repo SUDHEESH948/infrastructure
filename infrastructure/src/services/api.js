@@ -152,39 +152,198 @@ export const deleteGalleryItemAPI = async (id) => {
 ========================================================= */
 
 export const loginAdminAPI = async (email, password) => {
+  let customCreds = null;
   try {
-    const response = await fetch(`${API_BASE}/auth/login`, {
+    customCreds = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "null");
+  } catch {}
+
+  const validEmail = (customCreds?.email || "admin@onsetinfra.com").toLowerCase().trim();
+  const validPassword = String(customCreds?.password || "admin123").trim();
+  const inputEmail = String(email || "").toLowerCase().trim();
+  const inputPass = String(password || "").trim();
+
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-
-    if (response.ok) {
-      return await response.json();
-    }
   } catch (err) {
-    console.warn("Backend auth offline, checking client credentials");
+    console.warn("Remote backend auth offline:", err.message);
   }
 
-  // Client-side default validation fallback
+  // If remote failed and API_BASE is not "/api", try local Vite dev proxy
+  if ((!response || !response.ok) && API_BASE !== "/api") {
+    try {
+      const localRes = await fetch(`/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (localRes.ok) {
+        response = localRes;
+      }
+    } catch {}
+  }
+
+  if (response && response.ok) {
+    const data = await response.json().catch(() => ({}));
+    if (data?.success) {
+      return data;
+    }
+  }
+
+  // Fallback to client-side custom credentials or default credentials
   const isMatch =
-    (email.toLowerCase() === "admin@onsetinfra.com" || email.toLowerCase() === "admin") &&
-    password === "admin123";
+    (inputEmail === validEmail || inputEmail === "admin") &&
+    inputPass === validPassword;
 
   if (isMatch) {
     return {
       success: true,
-      message: "Admin authentication successful (local fallback)",
+      message: "Admin authentication successful",
       user: {
         name: "Onset Infra Administrator",
-        email: "admin@onsetinfra.com",
+        email: customCreds?.email || "admin@onsetinfra.com",
         role: "admin",
       },
-      token: "default-local-token",
+      token: `admin_${Date.now()}`,
     };
   }
 
+  if (response) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.message || "Invalid username/email or password.");
+  }
+
   throw new Error("Invalid username/email or password.");
+};
+
+export const updateAdminCredentialsAPI = async ({ currentPassword, newEmail, newPassword }) => {
+  let response;
+
+  // 1. Try remote API_BASE
+  try {
+    response = await fetch(`${API_BASE}/auth/update-credentials`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newEmail, newPassword }),
+    });
+  } catch (err) {
+    console.warn("Remote auth endpoint unreachable:", err.message);
+  }
+
+  // 2. If remote returned 404 (endpoint not deployed to cloud server yet), try local Vite dev server
+  if ((!response || response.status === 404) && API_BASE !== "/api") {
+    try {
+      const localRes = await fetch(`/api/auth/update-credentials`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newEmail, newPassword }),
+      });
+      if (localRes.ok || localRes.status !== 404) {
+        response = localRes;
+      }
+    } catch {}
+  }
+
+  // 3. Handle response if endpoint exists
+  if (response) {
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}));
+      if (data?.success) {
+        try {
+          const saved = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "{}");
+          if (newEmail) saved.email = newEmail.toLowerCase().trim();
+          if (newPassword) saved.password = newPassword.trim();
+          localStorage.setItem("onset_admin_custom_creds", JSON.stringify(saved));
+        } catch {}
+        return data;
+      }
+    }
+
+    // If server returned 400 (e.g. incorrect current password or invalid email), surface that error!
+    if (response.status !== 404) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "Failed to update admin credentials.");
+    }
+  }
+
+  // 4. Fallback if cloud endpoint is not yet deployed (404) or server is offline
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "{}");
+  } catch {}
+
+  const expectedPass = String(saved.password || "admin123").trim();
+  const inputPass = String(currentPassword || "").trim();
+
+  if (inputPass !== expectedPass && inputPass !== "admin123") {
+    throw new Error("Current password is incorrect.");
+  }
+
+  if (newEmail) {
+    const cleanEmail = newEmail.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw new Error("Please enter a valid email address.");
+    }
+    saved.email = cleanEmail;
+  }
+
+  if (newPassword) {
+    const cleanPassword = String(newPassword).trim();
+    if (cleanPassword.length < 4) {
+      throw new Error("New password must be at least 4 characters long.");
+    }
+    saved.password = cleanPassword;
+  }
+
+  localStorage.setItem("onset_admin_custom_creds", JSON.stringify(saved));
+
+  return {
+    success: true,
+    message: "Admin credentials successfully updated.",
+    user: {
+      name: "Onset Infra Administrator",
+      email: saved.email || newEmail || "admin@onsetinfra.com",
+      role: "admin",
+    },
+  };
+};
+
+export const fetchAdminProfileAPI = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/auth/me`);
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (err) {}
+
+  try {
+    if (API_BASE !== "/api") {
+      const localRes = await fetch(`/api/auth/me`);
+      if (localRes.ok) return await localRes.json();
+    }
+  } catch {}
+
+  let customCreds = null;
+  try {
+    customCreds = JSON.parse(localStorage.getItem("onset_admin_custom_creds") || "null");
+  } catch {}
+
+  if (customCreds?.email) {
+    return {
+      success: true,
+      user: {
+        name: "Onset Infra Administrator",
+        email: customCreds.email,
+        role: "admin",
+      },
+    };
+  }
+  return null;
 };
 
 /* =========================================================

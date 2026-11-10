@@ -18,6 +18,9 @@ import {
   MapPin,
   Sparkles,
   Eye,
+  EyeOff,
+  Shield,
+  Key,
   X,
   ArrowLeft,
   Search,
@@ -46,6 +49,8 @@ import {
   createGalleryItemAPI,
   deleteGalleryItemAPI,
   loginAdminAPI,
+  updateAdminCredentialsAPI,
+  fetchAdminProfileAPI,
   uploadImageAPI,
   uploadMultipleImagesAPI,
   fetchAllCategoriesAPI,
@@ -138,6 +143,20 @@ export default function Admin() {
     image: "",
   });
   const [galleryUploadedImages, setGalleryUploadedImages] = useState([]);
+
+  // Admin Credentials Modal State
+  const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [credsForm, setCredsForm] = useState({
+    currentPassword: "",
+    newEmail: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [credsLoading, setCredsLoading] = useState(false);
+  const [credsError, setCredsError] = useState("");
 
   // Default Category Definitions
   const DEFAULT_GALLERY_CATS = [
@@ -489,6 +508,15 @@ export default function Admin() {
         localStorage.removeItem("onset_admin_user");
       }
     }
+    // Sync latest profile from backend
+    fetchAdminProfileAPI()
+      .then((data) => {
+        if (data?.user) {
+          setCurrentUser(data.user);
+          localStorage.setItem("onset_admin_user", JSON.stringify(data.user));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const loadAllData = async (isSilent = false) => {
@@ -555,17 +583,75 @@ export default function Admin() {
     }
   };
 
-  const fillDefaultCredentials = () => {
-    setLoginEmail("admin@onsetinfra.com");
-    setLoginPassword("admin123");
-    setLoginError("");
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("onset_admin_token");
     localStorage.removeItem("onset_admin_user");
     setIsAuthenticated(false);
     setCurrentUser(null);
+  };
+
+  const openCredsModal = () => {
+    setCredsForm({
+      currentPassword: "",
+      newEmail: currentUser?.email || "admin@onsetinfra.com",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setCredsError("");
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setIsCredsModalOpen(true);
+  };
+
+  const handleUpdateCredentials = async (e) => {
+    e?.preventDefault();
+    setCredsError("");
+
+    if (!credsForm.currentPassword) {
+      setCredsError("Please enter your current password to authorize changes.");
+      return;
+    }
+
+    if (!credsForm.newEmail && !credsForm.newPassword) {
+      setCredsError("Please provide a new email or password to update.");
+      return;
+    }
+
+    if (credsForm.newPassword) {
+      if (credsForm.newPassword.length < 4) {
+        setCredsError("New password must be at least 4 characters long.");
+        return;
+      }
+      if (credsForm.newPassword !== credsForm.confirmPassword) {
+        setCredsError("New password and confirm password do not match.");
+        return;
+      }
+    }
+
+    try {
+      setCredsLoading(true);
+      const res = await updateAdminCredentialsAPI({
+        currentPassword: credsForm.currentPassword,
+        newEmail: credsForm.newEmail,
+        newPassword: credsForm.newPassword || undefined,
+      });
+
+      if (res?.success) {
+        const updatedUser = res.user || {
+          ...currentUser,
+          email: credsForm.newEmail || currentUser?.email,
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem("onset_admin_user", JSON.stringify(updatedUser));
+        showNotification("Admin credentials updated successfully!");
+        setIsCredsModalOpen(false);
+      }
+    } catch (err) {
+      setCredsError(err.message || "Failed to update admin credentials.");
+    } finally {
+      setCredsLoading(false);
+    }
   };
 
   // Open Project Modal
@@ -892,25 +978,6 @@ export default function Admin() {
             </button>
           </form>
 
-          {/* DEFAULT CREDENTIALS HELPER */}
-          <div className="mt-5 rounded-2xl border border-[#0066B4]/15 bg-[#EDF5FA] p-3.5 sm:p-4 text-xs text-slate-700">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-[#0066B4] uppercase tracking-wider text-[10px] sm:text-[11px]">
-                Default Admin Credentials
-              </span>
-              <button
-                type="button"
-                onClick={fillDefaultCredentials}
-                className="text-[11px] font-bold text-[#0066B4] underline hover:text-[#004f8c]"
-              >
-                Auto Fill
-              </button>
-            </div>
-            <div className="mt-2 space-y-1 font-mono text-[11px] text-slate-600">
-              <p>Email: <strong className="text-slate-800">admin@onsetinfra.com</strong></p>
-              <p>Password: <strong className="text-slate-800">admin123</strong></p>
-            </div>
-          </div>
 
           <div className="mt-5 text-center">
             <Link
@@ -1066,6 +1133,14 @@ export default function Admin() {
               <span className="hidden sm:inline">View Site</span>
             </Link>
             <button
+              onClick={openCredsModal}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-[#0066B4] hover:text-[#0066B4] active:scale-95"
+              title="Update admin email and password"
+            >
+              <Shield size={13} className="text-[#0066B4]" />
+              <span className="hidden sm:inline">Credentials</span>
+            </button>
+            <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 active:scale-95"
               title="Log out from dashboard"
@@ -1090,8 +1165,19 @@ export default function Admin() {
               <h1 className="mt-1 font-serif text-2xl font-light text-slate-900 xs:text-3xl sm:text-4xl">
                 Website Content Manager
               </h1>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Logged in as <strong className="text-slate-700">{currentUser?.email}</strong>
+              <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <span>
+                  Logged in as <strong className="text-slate-700">{currentUser?.email || "admin@onsetinfra.com"}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={openCredsModal}
+                  className="inline-flex items-center gap-1 rounded-md bg-[#0066B4]/10 px-2 py-0.5 text-[11px] font-semibold text-[#0066B4] transition hover:bg-[#0066B4]/20"
+                  title="Update Email & Password"
+                >
+                  <Edit3 size={11} />
+                  <span>Update Login</span>
+                </button>
               </p>
             </div>
 
@@ -2253,6 +2339,174 @@ export default function Admin() {
               </div>
             </form>
           )}
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          UPDATE ADMIN CREDENTIALS MODAL
+      ===================================================== */}
+      {isCredsModalOpen && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-5 sm:p-7 shadow-2xl transition-all">
+            <button
+              type="button"
+              onClick={() => setIsCredsModalOpen(false)}
+              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 sm:right-6 sm:top-6"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0066B4]/10 text-[#0066B4]">
+                <Shield size={22} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Admin Credentials</h3>
+                <p className="text-xs text-slate-500">Update your login email ID and password</p>
+              </div>
+            </div>
+
+            {credsError && (
+              <div className="mt-4 flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{credsError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateCredentials} className="mt-5 space-y-4">
+              {/* Current Password (Required for confirmation) */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  Current Password <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    required
+                    placeholder="Enter current password"
+                    value={credsForm.currentPassword}
+                    onChange={(e) =>
+                      setCredsForm({ ...credsForm, currentPassword: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                    title={showCurrentPassword ? "Hide password" : "Show password"}
+                  >
+                    {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <span className="text-[11px] text-slate-400">Required to authorize credential changes</span>
+              </div>
+
+              {/* New Email */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  Login Email ID
+                </label>
+                <div className="relative">
+                  <User size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="admin@onsetinfra.com"
+                    value={credsForm.newEmail}
+                    onChange={(e) =>
+                      setCredsForm({ ...credsForm, newEmail: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  />
+                </div>
+                <span className="text-[11px] text-slate-400">The email address you will use to log in</span>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                  New Password <span className="text-slate-400 font-normal lowercase">(leave blank to keep current)</span>
+                </label>
+                <div className="relative">
+                  <Key size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter new password (optional)"
+                    value={credsForm.newPassword}
+                    onChange={(e) =>
+                      setCredsForm({ ...credsForm, newPassword: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                    title={showNewPassword ? "Hide password" : "Show password"}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm New Password */}
+              {credsForm.newPassword && (
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                    Confirm New Password <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Key size={16} className="absolute left-3.5 top-3.5 text-slate-400" />
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      required={!!credsForm.newPassword}
+                      placeholder="Re-enter new password"
+                      value={credsForm.confirmPassword}
+                      onChange={(e) =>
+                        setCredsForm({ ...credsForm, confirmPassword: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#0066B4] focus:bg-white focus:ring-4 focus:ring-[#0066B4]/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                      title={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col-reverse justify-end gap-2 pt-3 sm:flex-row sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCredsModalOpen(false)}
+                  className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={credsLoading}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#0066B4] px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-white shadow-md shadow-[#0066B4]/25 hover:bg-[#00528F] active:scale-[0.99] disabled:opacity-50 transition"
+                >
+                  {credsLoading ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Credentials"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
